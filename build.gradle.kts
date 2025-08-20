@@ -1,4 +1,5 @@
 plugins {
+    application
     kotlin("jvm") version "2.1.21"
 }
 
@@ -15,4 +16,9 @@ dependencies {
 
 tasks.test {
     useJUnitPlatform()
+}
+
+application {
+    applicationName = "incjavac"
+    mainClass = "com.example.assignment.MainKt"
 }
