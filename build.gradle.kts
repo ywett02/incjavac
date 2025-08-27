@@ -11,6 +11,7 @@ repositories {
 }
 
 dependencies {
+    implementation("args4j:args4j:2.37")
     testImplementation(kotlin("test"))
 }
 
