@@ -1,6 +1,7 @@
 plugins {
     application
     kotlin("jvm") version "2.1.21"
+    kotlin("plugin.serialization") version "2.1.21"
 }
 
 group = "com.example.assignment"
@@ -12,6 +13,7 @@ repositories {
 
 dependencies {
     implementation("args4j:args4j:2.37")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.8.1")
     testImplementation(kotlin("test"))
 }
 

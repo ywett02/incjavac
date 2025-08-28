@@ -7,8 +7,6 @@ import org.kohsuke.args4j.spi.FileOptionHandler
 import java.io.File
 import java.util.logging.Level
 import java.util.logging.Logger
-import javax.tools.JavaCompiler
-import javax.tools.ToolProvider
 
 class IncrementalJavaCompilerCommand private constructor() {
 
@@ -36,22 +34,27 @@ class IncrementalJavaCompilerCommand private constructor() {
     )
     private var directory: File? = null
 
+    @Option(
+        name = "-cd",
+        aliases = ["-cacheDir"],
+        usage = "Directory where cache files will be stored",
+        required = true,
+        handler = FileOptionHandler::class
+    )
+    private var cacheDir: File? = null
+
     companion object {
-        private val logger: java.util.logging.Logger =
+        private val logger: Logger =
             Logger.getLogger("IncrementalJavaCompilerCommand")
 
         fun run(args: Array<String>): Int {
             logger.log(Level.INFO, "incJavac running with arguments: [${args.joinToString(separator = " ")}]")
             val incJavaCompilerArguments = parseArguments(args)
 
-            val javaCompilerArguments = incJavaCompilerArguments.toJavaCompilerArguments()
-            val compiler: JavaCompiler = ToolProvider.getSystemJavaCompiler()
+            val incrementalJavaCompilerRunner =
+                IncrementalJavaCompilerRunner(FileChangesDetector(FileMetadataStore.create(incJavaCompilerArguments.cacheDir)))
 
-            logger.log(
-                Level.INFO,
-                "javac running with arguments: [${javaCompilerArguments.joinToString(separator = " ")}]"
-            )
-            return compiler.run(null, null, null, *javaCompilerArguments.toTypedArray())
+            return incrementalJavaCompilerRunner.compile(incJavaCompilerArguments)
         }
 
         private fun parseArguments(args: Array<String>): IncrementalJavaCompilerArguments {
@@ -62,6 +65,7 @@ class IncrementalJavaCompilerCommand private constructor() {
                 parser.parseArgument(*args)
                 IncrementalJavaCompilerArguments(
                     requireNotNull(incrementalJavaCompilerCommand.src),
+                    requireNotNull(incrementalJavaCompilerCommand.cacheDir),
                     incrementalJavaCompilerCommand.classpath,
                     incrementalJavaCompilerCommand.directory
                 )

@@ -2,11 +2,14 @@ package com.example.assignment
 
 import java.io.File
 
+//TODO: Do I really need this?
 data class IncrementalJavaCompilerArguments(
     val src: File,
+    val cacheDir: File,
     val classpath: String?,
-    val directory: File?
+    val directory: File?,
 ) {
+
     val sourceFiles = findJavaFiles(src)
 
     private fun findJavaFiles(src: File): List<File> {
