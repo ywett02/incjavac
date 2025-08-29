@@ -51,18 +51,13 @@ import org.objectweb.asm.signature.SignatureVisitor;
  * @author Eugene Kuleshov
  */
 public class DependencyVisitor extends ClassVisitor {
-    Set<String> packages = new HashSet<String>();
 
-    Map<String, Map<String, Integer>> groups = new HashMap<String, Map<String, Integer>>();
+    Map<String, Set<String>> groups = new HashMap<String, Set<String>>();
 
-    Map<String, Integer> current;
+    Set<String> current;
 
-    public Map<String, Map<String, Integer>> getGlobals() {
+    public Map<String, Set<String>> getGlobals() {
         return groups;
-    }
-
-    public Set<String> getPackages() {
-        return packages;
     }
 
     public DependencyVisitor() {
@@ -79,12 +74,7 @@ public class DependencyVisitor extends ClassVisitor {
             final String signature,
             final String superName,
             final String[] interfaces) {
-        String p = getGroupKey(name);
-        current = groups.get(p);
-        if (current == null) {
-            current = new HashMap<String, Integer>();
-            groups.put(p, current);
-        }
+        current = groups.computeIfAbsent(name, k -> new HashSet<>());
 
         if (signature == null) {
             if (superName != null) {
@@ -308,25 +298,12 @@ public class DependencyVisitor extends ClassVisitor {
 
     // ---------------------------------------------
 
-    private String getGroupKey(String name) {
-        int n = name.lastIndexOf('/');
-        if (n > -1) {
-            name = name.substring(0, n);
-        }
-        packages.add(name);
-        return name;
-    }
-
     private void addName(final String name) {
         if (name == null) {
             return;
         }
-        String p = getGroupKey(name);
-        if (current.containsKey(p)) {
-            current.put(p, current.get(p) + 1);
-        } else {
-            current.put(p, 1);
-        }
+
+        current.add(name);
     }
 
     void addInternalName(final String name) {
