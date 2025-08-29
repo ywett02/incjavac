@@ -6,8 +6,8 @@ import java.io.File
 data class IncrementalJavaCompilerArguments(
     val src: File,
     val cacheDir: File,
+    val directory: File,
     val classpath: String?,
-    val directory: File?,
 ) {
 
     val sourceFiles = findJavaFiles(src)

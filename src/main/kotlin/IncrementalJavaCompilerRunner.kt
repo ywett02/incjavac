@@ -5,7 +5,9 @@ import java.util.logging.Logger
 import javax.tools.JavaCompiler
 import javax.tools.ToolProvider
 
-class IncrementalJavaCompilerRunner(private val fileChangesDetector: FileChangesDetector) {
+class IncrementalJavaCompilerRunner(
+    private val fileChangesDetector: FileChangesDetector
+) {
 
     fun compile(incrementalJavaCompilerArguments: IncrementalJavaCompilerArguments): Int {
         val fileChanges = fileChangesDetector.calculateFileChanges(incrementalJavaCompilerArguments.sourceFiles)
@@ -22,8 +24,19 @@ class IncrementalJavaCompilerRunner(private val fileChangesDetector: FileChanges
             Level.INFO,
             "javac running with arguments: [${javaCompilerArguments.joinToString(separator = " ")}]"
         )
+        val result = compiler.run(null, null, null, *javaCompilerArguments.toTypedArray())
 
-        return compiler.run(null, null, null, *javaCompilerArguments.toTypedArray())
+        val depGraph = ClassDependencyGraphBuilder().buildGraph(incrementalJavaCompilerArguments.directory)
+        logger.log(
+            Level.INFO,
+            """Dependency graph created: [
+                |${depGraph.joinToString()}
+                |]""".trimMargin()
+        )
+        val graphStore = ClassDependencyGraphStore.create(incrementalJavaCompilerArguments.cacheDir)
+        graphStore.store(depGraph)
+
+        return result
     }
 
     companion object {

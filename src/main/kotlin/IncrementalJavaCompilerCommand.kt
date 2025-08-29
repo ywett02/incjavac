@@ -66,8 +66,8 @@ class IncrementalJavaCompilerCommand private constructor() {
                 IncrementalJavaCompilerArguments(
                     requireNotNull(incrementalJavaCompilerCommand.src),
                     requireNotNull(incrementalJavaCompilerCommand.cacheDir),
-                    incrementalJavaCompilerCommand.classpath,
-                    incrementalJavaCompilerCommand.directory
+                    requireNotNull(incrementalJavaCompilerCommand.directory),
+                    incrementalJavaCompilerCommand.classpath
                 )
             } catch (cmdException: CmdLineException) {
                 System.err.println(cmdException.message)
