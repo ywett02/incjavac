@@ -13,11 +13,8 @@ import com.example.assignment.entity.FileChanges
 import com.example.assignment.storage.DependencyMapInMemoryStorage
 import com.example.assignment.storage.FileToFqnMapInMemoryStorage
 import com.example.assignment.util.joinToString
-import com.example.assignment.util.joinToString2
 import com.sun.source.util.JavacTask
 import java.io.File
-import java.util.logging.Level
-import java.util.logging.Logger
 import javax.tools.JavaCompiler
 import javax.tools.JavaFileObject
 import javax.tools.StandardJavaFileManager
@@ -32,23 +29,19 @@ class IncrementalJavaCompilerRunner(
     private val staleOutputCleaner: StaleOutputCleaner,
     private val fileToFqnMapInMemoryStorage: FileToFqnMapInMemoryStorage,
     private val dependencyMapInMemoryStorage: DependencyMapInMemoryStorage,
+    private val eventReporter: EventReporter
 ) {
 
     fun compile(incrementalJavaCompilerContext: IncrementalJavaCompilerContext): ExitCode =
         try {
             when (val compilationResult = tryCompileIncrementally(incrementalJavaCompilerContext)) {
                 is CompilationResult.RequiresRecompilation -> {
-                    logger.log(
-                        Level.INFO,
-                        "Non-incremental compilation will be performed: ${compilationResult.message}"
-                    )
-
+                    eventReporter.reportEvent("Non-incremental compilation will be performed: ${compilationResult.message}")
                     runCompilation(incrementalJavaCompilerContext.sourceFiles, incrementalJavaCompilerContext)
                 }
 
                 is CompilationResult.Error -> {
-                    logger.log(
-                        Level.INFO,
+                    eventReporter.reportEvent(
                         "Incremental compilation failed, non-incremental compilation will be performed"
                     )
 
@@ -56,8 +49,7 @@ class IncrementalJavaCompilerRunner(
                 }
 
                 is CompilationResult.Success -> {
-                    logger.log(
-                        Level.INFO,
+                    eventReporter.reportEvent(
                         "Incremental compilation completed"
                     )
 
@@ -65,10 +57,7 @@ class IncrementalJavaCompilerRunner(
                 }
             }
         } catch (e: Throwable) {
-            logger.log(
-                Level.WARNING,
-                "Compilation failed due to internal error: ${e.message}"
-            )
+            eventReporter.reportEvent("Compilation failed due to internal error: ${e.message}")
             ExitCode.INTERNAL_ERROR
         }
 
@@ -79,16 +68,14 @@ class IncrementalJavaCompilerRunner(
 
         return try {
             val fileChanges = fileChangesCalculator.calculateFileChanges(incrementalJavaCompilerContext.sourceFiles)
-            logger.log(
-                Level.INFO,
+            eventReporter.reportEvent(
                 """Added or modified files: [${fileChanges.addedAndModifiedFiles.joinToString()}]
                 |Removed files: [${fileChanges.removedFiles.joinToString()}]
             """.trimMargin()
             )
 
             val dirtyFiles = dirtyFilesCalculator.calculateDirtyFiles(fileChanges)
-            logger.log(
-                Level.INFO,
+            eventReporter.reportEvent(
                 "Dirty files: [${dirtyFiles.joinToString()}]"
             )
 
@@ -103,8 +90,7 @@ class IncrementalJavaCompilerRunner(
 
             return result
         } catch (e: Throwable) {
-            logger.log(
-                Level.WARNING,
+            eventReporter.reportEvent(
                 "Compilation failed due to internal error: ${e.message}"
             )
             CompilationResult.Error(e)
@@ -130,8 +116,7 @@ class IncrementalJavaCompilerRunner(
         val fileToFqnMapCollector = FileToFqnMapCollector(javacTask.elements)
         javacTask.addTaskListener(fileToFqnMapCollector)
 
-        logger.log(
-            Level.INFO,
+        eventReporter.reportEvent(
             "javac running with arguments: [${compilationOptions.joinToString(separator = " ")} ${
                 filesToCompile.joinToString(
                     separator = " ",
@@ -142,10 +127,9 @@ class IncrementalJavaCompilerRunner(
         val success = javacTask.call()
 
         val fileToFqnMap = fileToFqnMapCollector.fileToFqnMap
-        logger.log(
-            Level.INFO,
+        eventReporter.reportEvent(
             """File to FQN map created: [
-                |${fileToFqnMap.joinToString2()}
+                |${fileToFqnMap.joinToString({ it.absolutePath }, { it.id })}
                 |]""".trimMargin()
         )
         fileToFqnMapInMemoryStorage.set(fileToFqnMap)
@@ -180,23 +164,19 @@ class IncrementalJavaCompilerRunner(
     }
 
     private fun collectDependencies() {
-        fileManager.list(StandardLocation.CLASS_OUTPUT, "", setOf(JavaFileObject.Kind.CLASS), true).forEach {
-            val depGraph = dependencyMapCollector.collectDependencies(File(it.toUri()))
-            logger.log(
-                Level.INFO,
-                """Dependency graph created: [
-                |${depGraph.joinToString()}
+        fileManager.list(StandardLocation.CLASS_OUTPUT, "", setOf(JavaFileObject.Kind.CLASS), true)
+            .forEach { javaFileObject ->
+                val depGraph = dependencyMapCollector.collectDependencies(File(javaFileObject.toUri()))
+                eventReporter.reportEvent(
+                    """Dependency graph created: [
+                |${depGraph.joinToString({ it.id }, { it.id })}
                 |]""".trimMargin()
-            )
-            dependencyMapInMemoryStorage.set(depGraph)
-        }
+                )
+                dependencyMapInMemoryStorage.set(depGraph)
+            }
     }
 
     private fun cleanStaleOutput(changes: FileChanges) {
         staleOutputCleaner.cleanStaleOutput(changes.removedFiles, fileManager)
-    }
-
-    companion object {
-        private val logger = Logger.getLogger("IncrementalJavaCompilerRunner")
     }
 }

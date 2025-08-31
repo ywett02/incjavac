@@ -1,8 +1,5 @@
 package com.example.assignment.util
 
-import com.example.assignment.entity.FqName
-import java.io.File
-
 fun <K, V> Map<K, Set<V>>.inverted(): Map<V, Set<K>> {
     val result = mutableMapOf<V, MutableSet<K>>()
 
@@ -15,27 +12,13 @@ fun <K, V> Map<K, Set<V>>.inverted(): Map<V, Set<K>> {
     return result
 }
 
-//TODO remove
-fun Map<FqName, Set<FqName>>.joinToString(): String =
+fun <K, V> Map<K, Set<V>>.joinToString(transformKey: (K) -> String, transformValue: (V) -> String): String =
     buildString {
         for ((outerKey, innerSet) in this@joinToString) {
-            append(outerKey.toString())
+            append(transformKey(outerKey))
             append("\n")
             for (innerKey in innerSet) {
-                append("  ${innerKey.toString()}")
-                append("\n")
-            }
-        }
-    }
-
-//TODO remove
-fun Map<File, Set<FqName>>.joinToString2(): String =
-    buildString {
-        for ((outerKey, innerSet) in this@joinToString2) {
-            append(outerKey.absolutePath)
-            append("\n")
-            for (innerKey in innerSet) {
-                append("  ${innerKey.toString()}")
+                append("  ${transformValue(innerKey)}")
                 append("\n")
             }
         }

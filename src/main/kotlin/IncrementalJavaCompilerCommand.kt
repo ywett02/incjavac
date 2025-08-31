@@ -13,8 +13,6 @@ import org.kohsuke.args4j.CmdLineParser
 import org.kohsuke.args4j.Option
 import org.kohsuke.args4j.spi.FileOptionHandler
 import java.io.File
-import java.util.logging.Level
-import java.util.logging.Logger
 import javax.tools.ToolProvider
 
 class IncrementalJavaCompilerCommand private constructor() {
@@ -60,16 +58,23 @@ class IncrementalJavaCompilerCommand private constructor() {
     val cacheDir: File
         get() = _cacheDir ?: src.parentFile.resolve(DEFAULT_CACHE_DIR_NAME)
 
-    companion object {
-        private val logger: Logger =
-            Logger.getLogger("IncrementalJavaCompilerCommand")
+    @Option(
+        name = "-debug",
+        usage = "Enable debug mode",
+        required = false
+    )
+    private var _debug: Boolean = false
+    val debug: Boolean
+        get() = _debug
 
+    companion object {
         private const val DEFAULT_CACHE_DIR_NAME = "cache"
 
         fun run(args: Array<String>): ExitCode {
-            logger.log(Level.INFO, "incJavac running with arguments: [${args.joinToString(separator = " ")}]")
-
             val incrementalJavaCompilerCommand = createCommand(args)
+            val eventReporter = EventReporter(incrementalJavaCompilerCommand.debug)
+            eventReporter.reportEvent("incJavac running with arguments: [${args.joinToString(separator = " ")}]")
+
             val fileDigestInMemoryStorage = FileDigestInMemoryStorage.create(incrementalJavaCompilerCommand.cacheDir)
             val fileToFqnMapInMemoryStorage =
                 FileToFqnMapInMemoryStorage.create(incrementalJavaCompilerCommand.cacheDir)
@@ -86,7 +91,8 @@ class IncrementalJavaCompilerCommand private constructor() {
                     DependencyMapCollector(),
                     StaleOutputCleaner(fileToFqnMapInMemoryStorage, dependencyMapInMemoryStorage),
                     fileToFqnMapInMemoryStorage,
-                    dependencyMapInMemoryStorage
+                    dependencyMapInMemoryStorage,
+                    eventReporter
                 )
 
             val incrementalJavaCompilerContext = IncrementalJavaCompilerContext(
