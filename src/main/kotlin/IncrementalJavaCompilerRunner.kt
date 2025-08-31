@@ -32,9 +32,9 @@ class IncrementalJavaCompilerRunner(
     private val eventReporter: EventReporter
 ) {
 
-    fun compile(incrementalJavaCompilerContext: IncrementalJavaCompilerContext): ExitCode =
+    fun compile(incrementalJavaCompilerContext: IncrementalJavaCompilerContext): ExitCode {
         try {
-            when (val compilationResult = tryCompileIncrementally(incrementalJavaCompilerContext)) {
+            val exitCode = when (val compilationResult = tryCompileIncrementally(incrementalJavaCompilerContext)) {
                 is CompilationResult.RequiresRecompilation -> {
                     eventReporter.reportEvent("Non-incremental compilation will be performed: ${compilationResult.message}")
                     runCompilation(incrementalJavaCompilerContext.sourceFiles, incrementalJavaCompilerContext)
@@ -56,10 +56,14 @@ class IncrementalJavaCompilerRunner(
                     compilationResult.exitCode
                 }
             }
+            collectDependencies()
+
+            return exitCode
         } catch (e: Throwable) {
             eventReporter.reportEvent("Compilation failed due to internal error: ${e.message}")
-            ExitCode.INTERNAL_ERROR
+            return ExitCode.INTERNAL_ERROR
         }
+    }
 
     private fun tryCompileIncrementally(incrementalJavaCompilerContext: IncrementalJavaCompilerContext): CompilationResult {
         if (!fileToFqnMapInMemoryStorage.exists() || !dependencyMapInMemoryStorage.exists()) {
@@ -84,8 +88,6 @@ class IncrementalJavaCompilerRunner(
             }
 
             val result = CompilationResult.Success(runCompilation(dirtyFiles, incrementalJavaCompilerContext))
-
-            collectDependencies()
             cleanStaleOutput(fileChanges)
 
             return result
@@ -129,8 +131,7 @@ class IncrementalJavaCompilerRunner(
         val fileToFqnMap = fileToFqnMapCollector.fileToFqnMap
         eventReporter.reportEvent(
             """File to FQN map created: [
-                |${fileToFqnMap.joinToString({ it.absolutePath }, { it.id })}
-                |]""".trimMargin()
+                |${fileToFqnMap.joinToString({ it.absolutePath }, { it.id })}]""".trimMargin()
         )
         fileToFqnMapInMemoryStorage.set(fileToFqnMap)
 
@@ -169,8 +170,7 @@ class IncrementalJavaCompilerRunner(
                 val depGraph = dependencyMapCollector.collectDependencies(File(javaFileObject.toUri()))
                 eventReporter.reportEvent(
                     """Dependency graph created: [
-                |${depGraph.joinToString({ it.id }, { it.id })}
-                |]""".trimMargin()
+                |${depGraph.joinToString({ it.id }, { it.id })}]""".trimMargin()
                 )
                 dependencyMapInMemoryStorage.set(depGraph)
             }
