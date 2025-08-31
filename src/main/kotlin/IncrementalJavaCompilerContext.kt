@@ -10,24 +10,11 @@ data class IncrementalJavaCompilerContext(
 
     val sourceFiles = findJavaFiles(src)
 
-    private fun findJavaFiles(src: File): List<File> {
+    private fun findJavaFiles(src: File): Set<File> {
         if (src.isDirectory.not()) {
             throw IllegalArgumentException("Provided path is not a directory: ${src.path}")
         }
 
-        return src.walk().filter { file -> file.name.endsWith(".java") }.toList()
+        return src.walk().filter { file -> file.name.endsWith(".java") }.toSet()
     }
 }
-
-fun IncrementalJavaCompilerContext.toJavaCompilerArguments(): List<String> =
-    buildList<String> {
-        if (classpath != null) {
-            add("-cp")
-            add(classpath)
-        }
-
-        if (directory != null) {
-            add("-d")
-            add(directory.absolutePath)
-        }
-    }

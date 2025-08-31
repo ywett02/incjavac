@@ -1,6 +1,10 @@
 package com.example.assignment
 
+import com.example.assignment.analysis.DirtyFilesCalculator
 import com.example.assignment.analysis.FileChangesCalculator
+import com.example.assignment.analysis.StaleOutputCleaner
+import com.example.assignment.collector.DependencyMapCollector
+import com.example.assignment.entity.ExitCode
 import com.example.assignment.storage.DependencyMapInMemoryStorage
 import com.example.assignment.storage.FileDigestInMemoryStorage
 import com.example.assignment.storage.FileToFqnMapInMemoryStorage
@@ -11,6 +15,7 @@ import org.kohsuke.args4j.spi.FileOptionHandler
 import java.io.File
 import java.util.logging.Level
 import java.util.logging.Logger
+import javax.tools.ToolProvider
 
 class IncrementalJavaCompilerCommand private constructor() {
 
@@ -61,7 +66,7 @@ class IncrementalJavaCompilerCommand private constructor() {
 
         private const val DEFAULT_CACHE_DIR_NAME = "cache"
 
-        fun run(args: Array<String>): Boolean {
+        fun run(args: Array<String>): ExitCode {
             logger.log(Level.INFO, "incJavac running with arguments: [${args.joinToString(separator = " ")}]")
 
             val incrementalJavaCompilerCommand = createCommand(args)
@@ -71,9 +76,15 @@ class IncrementalJavaCompilerCommand private constructor() {
             val dependencyMapInMemoryStorage =
                 DependencyMapInMemoryStorage.create(incrementalJavaCompilerCommand.cacheDir)
 
+            val javaCompiler = ToolProvider.getSystemJavaCompiler()
             val incrementalJavaCompilerRunner =
                 IncrementalJavaCompilerRunner(
+                    javaCompiler,
+                    javaCompiler.getStandardFileManager(null, null, null),
                     FileChangesCalculator(fileDigestInMemoryStorage),
+                    DirtyFilesCalculator(fileToFqnMapInMemoryStorage, dependencyMapInMemoryStorage),
+                    DependencyMapCollector(),
+                    StaleOutputCleaner(fileToFqnMapInMemoryStorage, dependencyMapInMemoryStorage),
                     fileToFqnMapInMemoryStorage,
                     dependencyMapInMemoryStorage
                 )
@@ -84,15 +95,15 @@ class IncrementalJavaCompilerCommand private constructor() {
                 incrementalJavaCompilerCommand.classpath
             )
 
-            val success = incrementalJavaCompilerRunner.compile(incrementalJavaCompilerContext)
+            val exitCode = incrementalJavaCompilerRunner.compile(incrementalJavaCompilerContext)
 
-            if (success) {
+            if (exitCode == ExitCode.OK) {
                 fileDigestInMemoryStorage.close()
                 fileToFqnMapInMemoryStorage.close()
                 dependencyMapInMemoryStorage.close()
             }
 
-            return success
+            return exitCode
         }
 
         private fun createCommand(args: Array<String>): IncrementalJavaCompilerCommand {
