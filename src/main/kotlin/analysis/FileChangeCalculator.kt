@@ -1,6 +1,6 @@
 package com.example.assignment.analysis
 
-import com.example.assignment.FileChanges
+import com.example.assignment.entity.FileChanges
 import com.example.assignment.storage.FileDigestStorage
 import com.example.assignment.util.md5
 import java.io.File
