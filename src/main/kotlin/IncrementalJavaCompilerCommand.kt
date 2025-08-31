@@ -1,6 +1,6 @@
 package com.example.assignment
 
-import com.example.assignment.analysis.FileChangesDetector
+import com.example.assignment.analysis.FileChangesCalculator
 import com.example.assignment.storage.FileDigestStorage
 import org.kohsuke.args4j.CmdLineException
 import org.kohsuke.args4j.CmdLineParser
@@ -56,7 +56,7 @@ class IncrementalJavaCompilerCommand private constructor() {
             val incJavaCompilerArguments = parseArguments(args)
 
             val incrementalJavaCompilerRunner =
-                IncrementalJavaCompilerRunner(FileChangesDetector(FileDigestStorage.create(incJavaCompilerArguments.cacheDir)))
+                IncrementalJavaCompilerRunner(FileChangesCalculator(FileDigestStorage.create(incJavaCompilerArguments.cacheDir)))
 
             return incrementalJavaCompilerRunner.compile(incJavaCompilerArguments)
         }

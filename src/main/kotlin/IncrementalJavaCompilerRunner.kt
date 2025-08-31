@@ -1,6 +1,6 @@
 package com.example.assignment
 
-import com.example.assignment.analysis.FileChangesDetector
+import com.example.assignment.analysis.FileChangesCalculator
 import com.example.assignment.collector.DependencyMapCollector
 import com.example.assignment.storage.DependencyMapStorage
 import java.util.logging.Level
@@ -9,11 +9,11 @@ import javax.tools.JavaCompiler
 import javax.tools.ToolProvider
 
 class IncrementalJavaCompilerRunner(
-    private val fileChangesDetector: FileChangesDetector
+    private val fileChangesCalculator: FileChangesCalculator,
 ) {
 
     fun compile(incrementalJavaCompilerArguments: IncrementalJavaCompilerArguments): Int {
-        val fileChanges = fileChangesDetector.calculateFileChanges(incrementalJavaCompilerArguments.sourceFiles)
+        val fileChanges = fileChangesCalculator.calculateFileChanges(incrementalJavaCompilerArguments.sourceFiles)
         logger.log(
             Level.INFO,
             """Added or modified files: [${fileChanges.addedAndModifiedFiles.joinToString()}]
