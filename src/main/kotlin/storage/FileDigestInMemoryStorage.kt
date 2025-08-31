@@ -3,40 +3,44 @@ package com.example.assignment.storage
 import com.example.assignment.entity.serializer.FileAsAbsPathSerializer
 import com.example.assignment.util.mapSerializer
 import kotlinx.serialization.builtins.serializer
+import java.io.Closeable
 import java.io.File
 
-class FileDigestStorage private constructor(
+class FileDigestInMemoryStorage private constructor(
     private val dataStorage: DataStorage<Map<File, String>>
-) {
+) : Closeable {
 
-    fun save(data: Map<File, String>) {
-        val previousData = load() ?: return dataStorage.save(data)
-        val mergedData = previousData.toMutableMap().apply { putAll(data) }
-
-        dataStorage.save(mergedData)
+    private val inMemoryData: MutableMap<File, String> by lazy {
+        dataStorage.load()?.toMutableMap() ?: mutableMapOf()
     }
 
-    fun load(): Map<File, String>? {
-        return dataStorage.load()
+    fun set(data: Map<File, String>) {
+        inMemoryData.putAll(data)
+    }
+
+    fun get(): Map<File, String> {
+        return inMemoryData
     }
 
     fun remove(key: File) {
-        val data = load() ?: return
+        inMemoryData.remove(key)
+    }
 
-        val result = data.toMutableMap().apply { remove(key) }
-        dataStorage.save(result)
+    override fun close() {
+        dataStorage.save(inMemoryData)
+        inMemoryData.clear()
     }
 
     companion object {
         private const val STORAGE_FILE_NAME = "fileDigest.json"
 
-        fun create(cacheDir: File): FileDigestStorage {
+        fun create(cacheDir: File): FileDigestInMemoryStorage {
             val dataStorage = DataStorage<Map<File, String>>(
                 cacheDir.resolve(STORAGE_FILE_NAME),
                 mapSerializer(FileAsAbsPathSerializer, String.serializer())
             )
 
-            return FileDigestStorage(dataStorage)
+            return FileDigestInMemoryStorage(dataStorage)
         }
     }
 }

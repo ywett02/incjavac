@@ -1,7 +1,7 @@
 package com.example.assignment
 
 import com.example.assignment.analysis.FileChangesCalculator
-import com.example.assignment.storage.FileDigestStorage
+import com.example.assignment.storage.FileDigestInMemoryStorage
 import org.kohsuke.args4j.CmdLineException
 import org.kohsuke.args4j.CmdLineParser
 import org.kohsuke.args4j.Option
@@ -55,10 +55,17 @@ class IncrementalJavaCompilerCommand private constructor() {
             logger.log(Level.INFO, "incJavac running with arguments: [${args.joinToString(separator = " ")}]")
             val incJavaCompilerArguments = parseArguments(args)
 
+            val fileDigestInMemoryStorage = FileDigestInMemoryStorage.create(incJavaCompilerArguments.cacheDir)
             val incrementalJavaCompilerRunner =
-                IncrementalJavaCompilerRunner(FileChangesCalculator(FileDigestStorage.create(incJavaCompilerArguments.cacheDir)))
+                IncrementalJavaCompilerRunner(FileChangesCalculator(fileDigestInMemoryStorage))
 
-            return incrementalJavaCompilerRunner.compile(incJavaCompilerArguments)
+            val result = incrementalJavaCompilerRunner.compile(incJavaCompilerArguments)
+
+            if (result == 0) {
+                fileDigestInMemoryStorage.close()
+            }
+
+            return result
         }
 
         private fun parseArguments(args: Array<String>): IncrementalJavaCompilerArguments {

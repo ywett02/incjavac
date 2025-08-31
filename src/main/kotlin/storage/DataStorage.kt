@@ -9,8 +9,6 @@ class DataStorage<T>(
     private val serializer: KSerializer<T>
 ) {
 
-    private var inMemoryData: T? = null
-
     fun save(data: T) {
         if (!storageFile.exists()) {
             storageFile.parentFile?.mkdirs()
@@ -22,19 +20,13 @@ class DataStorage<T>(
 
     fun load(): T? {
         if (!storageFile.exists()) {
-            inMemoryData = null
             return null
-        }
-
-        if (inMemoryData != null) {
-            return inMemoryData
         }
 
         val jsonString = storageFile.readText()
-        if (jsonString.isBlank()) {
-            return null
-        }
-
         return Json.decodeFromString<T>(serializer, jsonString)
     }
+
+    fun exists(): Boolean =
+        storageFile.exists()
 }

@@ -1,26 +1,25 @@
 package com.example.assignment.analysis
 
 import com.example.assignment.entity.FileChanges
-import com.example.assignment.storage.FileDigestStorage
+import com.example.assignment.storage.FileDigestInMemoryStorage
 import com.example.assignment.util.md5
 import java.io.File
 
 class FileChangesCalculator(
-    private val fileDigestStorage: FileDigestStorage
+    private val fileDigestInMemoryStorage: FileDigestInMemoryStorage
 ) {
 
     fun calculateFileChanges(sourceFiles: List<File>): FileChanges {
         val currentMetadata = sourceFiles.associate { file -> file.absoluteFile to file.md5 }
         //TODO: handle the first run
-        val previousMetadata = fileDigestStorage.load() ?: mutableMapOf()
+        val previousMetadata = fileDigestInMemoryStorage.get()
 
         val fileChanges = FileChanges(
             calculateAddedAndModifiedFiles(currentMetadata, previousMetadata),
             calculateRemovedFiles(currentMetadata, previousMetadata)
         )
 
-        //TODO: metadata could be stored only if compilation succeed
-        fileDigestStorage.save(currentMetadata)
+        fileDigestInMemoryStorage.set(currentMetadata)
 
         return fileChanges
     }

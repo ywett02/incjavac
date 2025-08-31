@@ -2,7 +2,7 @@ package com.example.assignment
 
 import com.example.assignment.analysis.FileChangesCalculator
 import com.example.assignment.collector.DependencyMapCollector
-import com.example.assignment.storage.DependencyMapStorage
+import com.example.assignment.storage.DependencyMapInMemoryStorage
 import com.example.assignment.util.joinToString
 import java.util.logging.Level
 import java.util.logging.Logger
@@ -37,8 +37,8 @@ class IncrementalJavaCompilerRunner(
                 |${depGraph.joinToString()}
                 |]""".trimMargin()
         )
-        val graphStore = DependencyMapStorage.create(incrementalJavaCompilerArguments.cacheDir)
-        graphStore.save(depGraph)
+        val graphStore = DependencyMapInMemoryStorage.create(incrementalJavaCompilerArguments.cacheDir)
+        graphStore.set(depGraph)
 
         return result
     }
