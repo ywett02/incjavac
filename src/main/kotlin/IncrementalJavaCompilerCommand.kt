@@ -1,6 +1,7 @@
 package com.example.assignment
 
 import com.example.assignment.analysis.FileChangesCalculator
+import com.example.assignment.storage.DependencyMapInMemoryStorage
 import com.example.assignment.storage.FileDigestInMemoryStorage
 import com.example.assignment.storage.FileToFqnMapInMemoryStorage
 import org.kohsuke.args4j.CmdLineException
@@ -58,10 +59,13 @@ class IncrementalJavaCompilerCommand private constructor() {
 
             val fileDigestInMemoryStorage = FileDigestInMemoryStorage.create(incJavaCompilerArguments.cacheDir)
             val fileToFqnMapInMemoryStorage = FileToFqnMapInMemoryStorage.create(incJavaCompilerArguments.cacheDir)
+            val dependencyMapInMemoryStorage = DependencyMapInMemoryStorage.create(incJavaCompilerArguments.cacheDir)
+
             val incrementalJavaCompilerRunner =
                 IncrementalJavaCompilerRunner(
                     FileChangesCalculator(fileDigestInMemoryStorage),
-                    fileToFqnMapInMemoryStorage
+                    fileToFqnMapInMemoryStorage,
+                    dependencyMapInMemoryStorage
                 )
 
             val success = incrementalJavaCompilerRunner.compile(incJavaCompilerArguments)
@@ -69,6 +73,7 @@ class IncrementalJavaCompilerCommand private constructor() {
             if (success) {
                 fileDigestInMemoryStorage.close()
                 fileToFqnMapInMemoryStorage.close()
+                dependencyMapInMemoryStorage.close()
             }
 
             return success

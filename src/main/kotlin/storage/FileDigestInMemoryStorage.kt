@@ -15,6 +15,7 @@ class FileDigestInMemoryStorage private constructor(
     }
 
     fun set(data: Map<File, String>) {
+        inMemoryData.clear()
         inMemoryData.putAll(data)
     }
 

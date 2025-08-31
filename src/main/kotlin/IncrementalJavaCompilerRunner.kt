@@ -2,6 +2,7 @@ package com.example.assignment
 
 import com.example.assignment.analysis.FileChangesCalculator
 import com.example.assignment.analysis.FileToFqnMapCollector
+import com.example.assignment.analysis.StaleOutputCleaner
 import com.example.assignment.collector.DependencyMapCollector
 import com.example.assignment.storage.DependencyMapInMemoryStorage
 import com.example.assignment.storage.FileToFqnMapInMemoryStorage
@@ -16,6 +17,7 @@ import javax.tools.ToolProvider
 class IncrementalJavaCompilerRunner(
     private val fileChangesCalculator: FileChangesCalculator,
     private val fileToFqnMapInMemoryStorage: FileToFqnMapInMemoryStorage,
+    private val dependencyMapInMemoryStorage: DependencyMapInMemoryStorage
 ) {
 
     fun compile(incrementalJavaCompilerArguments: IncrementalJavaCompilerArguments): Boolean {
@@ -50,24 +52,31 @@ class IncrementalJavaCompilerRunner(
         )
         val success = javacTask.call()
 
-        val depGraph = DependencyMapCollector().collectDependencies(incrementalJavaCompilerArguments.directory)
-        logger.log(
-            Level.INFO,
-            """Dependency graph created: [
+        if (success) {
+
+            StaleOutputCleaner(
+                fileToFqnMapInMemoryStorage,
+                dependencyMapInMemoryStorage
+            ).cleanStaleOutput(fileChanges.removedFiles, fileManager)
+
+            val depGraph = DependencyMapCollector().collectDependencies(incrementalJavaCompilerArguments.directory)
+            logger.log(
+                Level.INFO,
+                """Dependency graph created: [
                 |${depGraph.joinToString()}
                 |]""".trimMargin()
-        )
-        val graphStore = DependencyMapInMemoryStorage.create(incrementalJavaCompilerArguments.cacheDir)
-        graphStore.set(depGraph)
+            )
+            dependencyMapInMemoryStorage.set(depGraph)
 
-        val fileToFqnMap = fileToFqnMapCollector.fileToFqnMap
-        logger.log(
-            Level.INFO,
-            """File to FQN map created: [
+            val fileToFqnMap = fileToFqnMapCollector.fileToFqnMap
+            logger.log(
+                Level.INFO,
+                """File to FQN map created: [
                 |${fileToFqnMap.joinToString2()}
                 |]""".trimMargin()
-        )
-        fileToFqnMapInMemoryStorage.set(fileToFqnMap)
+            )
+            fileToFqnMapInMemoryStorage.set(fileToFqnMap)
+        }
 
         return success
     }
