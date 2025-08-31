@@ -8,12 +8,12 @@ import java.io.File
 class DependencyMapCollector {
 
     private val visitor: DependencyVisitor = DependencyVisitor()
+    val dependencyMap: Map<FqName, Set<FqName>>
+        get() = visitor.globals
 
-    fun collectDependencies(file: File): Map<FqName, Set<FqName>> {
+    fun collectDependencies(file: File) {
         file.inputStream().use { inputStream ->
             ClassReader(inputStream).accept(visitor, 0)
         }
-
-        return visitor.globals
     }
 }

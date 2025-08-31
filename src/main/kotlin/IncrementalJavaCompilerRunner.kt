@@ -144,8 +144,13 @@ class IncrementalJavaCompilerRunner(
 
 
     private fun createCompilationOptions(incrementalJavaCompilerContext: IncrementalJavaCompilerContext): Iterable<String> {
+        val classFiles = fileManager.list(StandardLocation.CLASS_OUTPUT, "", setOf(JavaFileObject.Kind.CLASS), true)
+            .map { javaFileObject ->
+                File(javaFileObject.toUri())
+            }.joinToString(separator = File.pathSeparator, transform = { file -> file.absolutePath })
+
         val classpath = buildString {
-            append(incrementalJavaCompilerContext.src.absolutePath)
+            append(classFiles)
 
             if (incrementalJavaCompilerContext.classpath != null) {
                 append(File.pathSeparator)
@@ -167,13 +172,14 @@ class IncrementalJavaCompilerRunner(
     private fun collectDependencies() {
         fileManager.list(StandardLocation.CLASS_OUTPUT, "", setOf(JavaFileObject.Kind.CLASS), true)
             .forEach { javaFileObject ->
-                val depGraph = dependencyMapCollector.collectDependencies(File(javaFileObject.toUri()))
-                eventReporter.reportEvent(
-                    """Dependency graph created: [
-                |${depGraph.joinToString({ it.id }, { it.id })}]""".trimMargin()
-                )
-                dependencyMapInMemoryStorage.set(depGraph)
+                dependencyMapCollector.collectDependencies(File(javaFileObject.toUri()))
             }
+
+        eventReporter.reportEvent(
+            """Dependency graph created: [
+                |${dependencyMapCollector.dependencyMap.joinToString({ it.id }, { it.id })}]""".trimMargin()
+        )
+        dependencyMapInMemoryStorage.set(dependencyMapCollector.dependencyMap)
     }
 
     private fun cleanStaleOutput(changes: FileChanges) {
