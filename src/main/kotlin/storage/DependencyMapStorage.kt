@@ -10,7 +10,18 @@ class DependencyMapStorage constructor(
 ) {
 
     fun save(data: Map<FqName, Set<FqName>>) {
-        dataStorage.save(data)
+        val previousData = load() ?: return dataStorage.save(data)
+
+        val mergedData = mutableMapOf<FqName, MutableSet<FqName>>()
+
+        for ((key, value) in previousData) {
+            mergedData.computeIfAbsent(key) { mutableSetOf() }.addAll(value)
+        }
+        for ((key, value) in data) {
+            mergedData.computeIfAbsent(key) { mutableSetOf() }.addAll(value)
+        }
+
+        dataStorage.save(mergedData)
     }
 
     fun load(): Map<FqName, Set<FqName>>? {

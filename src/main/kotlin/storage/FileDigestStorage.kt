@@ -10,7 +10,10 @@ class FileDigestStorage private constructor(
 ) {
 
     fun save(data: Map<File, String>) {
-        dataStorage.save(data)
+        val previousData = load() ?: return dataStorage.save(data)
+        val mergedData = previousData.toMutableMap().apply { putAll(data) }
+
+        dataStorage.save(mergedData)
     }
 
     fun load(): Map<File, String>? {
