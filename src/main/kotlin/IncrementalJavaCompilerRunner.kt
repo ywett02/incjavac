@@ -1,5 +1,6 @@
 package com.example.assignment
 
+import com.example.assignment.analysis.FileChangesDetector
 import com.example.assignment.collector.DependencyMapCollector
 import com.example.assignment.storage.DependencyMapStorage
 import java.util.logging.Level

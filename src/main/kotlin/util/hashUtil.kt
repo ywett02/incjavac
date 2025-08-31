@@ -1,4 +1,4 @@
-package com.example.assignment
+package com.example.assignment.util
 
 import java.io.File
 import java.security.MessageDigest

@@ -1,8 +1,8 @@
 package com.example.assignment.storage
 
 import com.example.assignment.entity.FqName
-import com.example.assignment.entity.FqNameAsStringSerializer
-import com.example.assignment.utils.mapOfSetsSerializer
+import com.example.assignment.entity.serializer.FqNameAsStringSerializer
+import com.example.assignment.util.mapOfSetsSerializer
 import java.io.File
 
 class DependencyMapStorage constructor(
@@ -23,7 +23,7 @@ class DependencyMapStorage constructor(
         fun create(cacheDir: File): DependencyMapStorage {
             val dataStorage = DataStorage<Map<FqName, Set<FqName>>>(
                 cacheDir.resolve(STORAGE_FILE_NAME),
-                mapOfSetsSerializer(FqNameAsStringSerializer)
+                mapOfSetsSerializer(FqNameAsStringSerializer, FqNameAsStringSerializer)
             )
 
             return DependencyMapStorage(dataStorage)
