@@ -66,17 +66,17 @@ class IncrementalJavaCompilerRunner(
     }
 
     private fun tryCompileIncrementally(incrementalJavaCompilerContext: IncrementalJavaCompilerContext): CompilationResult {
-        if (!fileToFqnMapInMemoryStorage.exists() || !dependencyMapInMemoryStorage.exists()) {
-            return CompilationResult.RequiresRecompilation("Required metadata doest not exist")
-        }
-
-        return try {
+        try {
             val fileChanges = fileChangesCalculator.calculateFileChanges(incrementalJavaCompilerContext.sourceFiles)
             eventReporter.reportEvent(
                 """Added or modified files: [${fileChanges.addedAndModifiedFiles.joinToString()}]
                 |Removed files: [${fileChanges.removedFiles.joinToString()}]
             """.trimMargin()
             )
+
+            if (!fileToFqnMapInMemoryStorage.exists() || !dependencyMapInMemoryStorage.exists()) {
+                return CompilationResult.RequiresRecompilation("Required metadata doest not exist")
+            }
 
             val dirtyFiles = dirtyFilesCalculator.calculateDirtyFiles(fileChanges)
             eventReporter.reportEvent(
@@ -95,7 +95,8 @@ class IncrementalJavaCompilerRunner(
             eventReporter.reportEvent(
                 "Compilation failed due to internal error: ${e.message}"
             )
-            CompilationResult.Error(e)
+
+            return CompilationResult.Error(e)
         }
     }
 
