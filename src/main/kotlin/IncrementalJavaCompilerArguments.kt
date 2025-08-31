@@ -32,8 +32,4 @@ fun IncrementalJavaCompilerArguments.toJavaCompilerArguments(): List<String> =
             add("-d")
             add(directory.absolutePath)
         }
-
-        addAll(
-            sourceFiles.map { file -> file.absolutePath }
-        )
     }

@@ -2,6 +2,7 @@ package com.example.assignment
 
 import com.example.assignment.analysis.FileChangesCalculator
 import com.example.assignment.storage.FileDigestInMemoryStorage
+import com.example.assignment.storage.FileToFqnMapInMemoryStorage
 import org.kohsuke.args4j.CmdLineException
 import org.kohsuke.args4j.CmdLineParser
 import org.kohsuke.args4j.Option
@@ -51,21 +52,26 @@ class IncrementalJavaCompilerCommand private constructor() {
         private val logger: Logger =
             Logger.getLogger("IncrementalJavaCompilerCommand")
 
-        fun run(args: Array<String>): Int {
+        fun run(args: Array<String>): Boolean {
             logger.log(Level.INFO, "incJavac running with arguments: [${args.joinToString(separator = " ")}]")
             val incJavaCompilerArguments = parseArguments(args)
 
             val fileDigestInMemoryStorage = FileDigestInMemoryStorage.create(incJavaCompilerArguments.cacheDir)
+            val fileToFqnMapInMemoryStorage = FileToFqnMapInMemoryStorage.create(incJavaCompilerArguments.cacheDir)
             val incrementalJavaCompilerRunner =
-                IncrementalJavaCompilerRunner(FileChangesCalculator(fileDigestInMemoryStorage))
+                IncrementalJavaCompilerRunner(
+                    FileChangesCalculator(fileDigestInMemoryStorage),
+                    fileToFqnMapInMemoryStorage
+                )
 
-            val result = incrementalJavaCompilerRunner.compile(incJavaCompilerArguments)
+            val success = incrementalJavaCompilerRunner.compile(incJavaCompilerArguments)
 
-            if (result == 0) {
+            if (success) {
                 fileDigestInMemoryStorage.close()
+                fileToFqnMapInMemoryStorage.close()
             }
 
-            return result
+            return success
         }
 
         private fun parseArguments(args: Array<String>): IncrementalJavaCompilerArguments {
