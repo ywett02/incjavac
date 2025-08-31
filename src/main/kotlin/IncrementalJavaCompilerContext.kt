@@ -2,11 +2,9 @@ package com.example.assignment
 
 import java.io.File
 
-//TODO: Do I really need this?
-data class IncrementalJavaCompilerArguments(
+data class IncrementalJavaCompilerContext(
     val src: File,
-    val cacheDir: File,
-    val directory: File,
+    val directory: File?,
     val classpath: String?,
 ) {
 
@@ -21,7 +19,7 @@ data class IncrementalJavaCompilerArguments(
     }
 }
 
-fun IncrementalJavaCompilerArguments.toJavaCompilerArguments(): List<String> =
+fun IncrementalJavaCompilerContext.toJavaCompilerArguments(): List<String> =
     buildList<String> {
         if (classpath != null) {
             add("-cp")

@@ -30,7 +30,9 @@ class IncrementalJavaCompilerCommand private constructor() {
         usage = "List of directories and JAR/ZIP archives to search for class files",
         required = false,
     )
-    var classpath: String? = null
+    private var _classpath: String? = null
+    val classpath: String?
+        get() = _classpath
 
     @Option(
         name = "-d",
@@ -38,7 +40,9 @@ class IncrementalJavaCompilerCommand private constructor() {
         required = false,
         handler = FileOptionHandler::class
     )
-    var directory: File? = null
+    private var _directory: File? = null
+    val directory: File?
+        get() = _directory
 
     @Option(
         name = "-cd",
@@ -47,19 +51,25 @@ class IncrementalJavaCompilerCommand private constructor() {
         required = true,
         handler = FileOptionHandler::class
     )
-    var cacheDir: File? = null
+    private var _cacheDir: File? = null
+    val cacheDir: File
+        get() = _cacheDir ?: src.parentFile.resolve(DEFAULT_CACHE_DIR_NAME)
 
     companion object {
         private val logger: Logger =
             Logger.getLogger("IncrementalJavaCompilerCommand")
 
+        private const val DEFAULT_CACHE_DIR_NAME = "cache"
+
         fun run(args: Array<String>): Boolean {
             logger.log(Level.INFO, "incJavac running with arguments: [${args.joinToString(separator = " ")}]")
-            val incJavaCompilerArguments = parseArguments(args)
 
-            val fileDigestInMemoryStorage = FileDigestInMemoryStorage.create(incJavaCompilerArguments.cacheDir)
-            val fileToFqnMapInMemoryStorage = FileToFqnMapInMemoryStorage.create(incJavaCompilerArguments.cacheDir)
-            val dependencyMapInMemoryStorage = DependencyMapInMemoryStorage.create(incJavaCompilerArguments.cacheDir)
+            val incrementalJavaCompilerCommand = createCommand(args)
+            val fileDigestInMemoryStorage = FileDigestInMemoryStorage.create(incrementalJavaCompilerCommand.cacheDir)
+            val fileToFqnMapInMemoryStorage =
+                FileToFqnMapInMemoryStorage.create(incrementalJavaCompilerCommand.cacheDir)
+            val dependencyMapInMemoryStorage =
+                DependencyMapInMemoryStorage.create(incrementalJavaCompilerCommand.cacheDir)
 
             val incrementalJavaCompilerRunner =
                 IncrementalJavaCompilerRunner(
@@ -68,7 +78,13 @@ class IncrementalJavaCompilerCommand private constructor() {
                     dependencyMapInMemoryStorage
                 )
 
-            val success = incrementalJavaCompilerRunner.compile(incJavaCompilerArguments)
+            val incrementalJavaCompilerContext = IncrementalJavaCompilerContext(
+                incrementalJavaCompilerCommand.src,
+                incrementalJavaCompilerCommand.directory,
+                incrementalJavaCompilerCommand.classpath
+            )
+
+            val success = incrementalJavaCompilerRunner.compile(incrementalJavaCompilerContext)
 
             if (success) {
                 fileDigestInMemoryStorage.close()
@@ -79,18 +95,13 @@ class IncrementalJavaCompilerCommand private constructor() {
             return success
         }
 
-        private fun parseArguments(args: Array<String>): IncrementalJavaCompilerArguments {
+        private fun createCommand(args: Array<String>): IncrementalJavaCompilerCommand {
             val incrementalJavaCompilerCommand = IncrementalJavaCompilerCommand()
             val parser = CmdLineParser(incrementalJavaCompilerCommand)
 
             return try {
                 parser.parseArgument(*args)
-                IncrementalJavaCompilerArguments(
-                    incrementalJavaCompilerCommand.src,
-                    requireNotNull(incrementalJavaCompilerCommand.cacheDir),
-                    requireNotNull(incrementalJavaCompilerCommand.directory),
-                    incrementalJavaCompilerCommand.classpath
-                )
+                return incrementalJavaCompilerCommand
             } catch (cmdException: CmdLineException) {
                 System.err.println(cmdException.message)
                 parser.printUsage(System.err)

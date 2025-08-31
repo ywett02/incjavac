@@ -9,9 +9,12 @@ import com.example.assignment.storage.FileToFqnMapInMemoryStorage
 import com.example.assignment.util.joinToString
 import com.example.assignment.util.joinToString2
 import com.sun.source.util.JavacTask
+import java.io.File
 import java.util.logging.Level
 import java.util.logging.Logger
 import javax.tools.JavaCompiler
+import javax.tools.JavaFileObject
+import javax.tools.StandardLocation
 import javax.tools.ToolProvider
 
 class IncrementalJavaCompilerRunner(
@@ -20,8 +23,10 @@ class IncrementalJavaCompilerRunner(
     private val dependencyMapInMemoryStorage: DependencyMapInMemoryStorage
 ) {
 
-    fun compile(incrementalJavaCompilerArguments: IncrementalJavaCompilerArguments): Boolean {
-        val fileChanges = fileChangesCalculator.calculateFileChanges(incrementalJavaCompilerArguments.sourceFiles)
+    fun compile(incrementalJavaCompilerContext: IncrementalJavaCompilerContext): Boolean {
+
+
+        val fileChanges = fileChangesCalculator.calculateFileChanges(incrementalJavaCompilerContext.sourceFiles)
         logger.log(
             Level.INFO,
             """Added or modified files: [${fileChanges.addedAndModifiedFiles.joinToString()}]
@@ -29,10 +34,10 @@ class IncrementalJavaCompilerRunner(
             """.trimMargin()
         )
 
-        val javaCompilerArguments = incrementalJavaCompilerArguments.toJavaCompilerArguments()
+        val javaCompilerArguments = incrementalJavaCompilerContext.toJavaCompilerArguments()
         val compiler: JavaCompiler = ToolProvider.getSystemJavaCompiler()
         val fileManager = compiler.getStandardFileManager(null, null, null)
-        val compilationUnits = fileManager.getJavaFileObjectsFromFiles(incrementalJavaCompilerArguments.sourceFiles)
+        val compilationUnits = fileManager.getJavaFileObjectsFromFiles(incrementalJavaCompilerContext.sourceFiles)
 
         val javacTask = compiler.getTask(
             null,
@@ -59,14 +64,16 @@ class IncrementalJavaCompilerRunner(
                 dependencyMapInMemoryStorage
             ).cleanStaleOutput(fileChanges.removedFiles, fileManager)
 
-            val depGraph = DependencyMapCollector().collectDependencies(incrementalJavaCompilerArguments.directory)
-            logger.log(
-                Level.INFO,
-                """Dependency graph created: [
+            fileManager.list(StandardLocation.CLASS_OUTPUT, "", setOf(JavaFileObject.Kind.CLASS), true).forEach {
+                val depGraph = DependencyMapCollector().collectDependencies(File(it.toUri()))
+                logger.log(
+                    Level.INFO,
+                    """Dependency graph created: [
                 |${depGraph.joinToString()}
                 |]""".trimMargin()
-            )
-            dependencyMapInMemoryStorage.set(depGraph)
+                )
+                dependencyMapInMemoryStorage.set(depGraph)
+            }
 
             val fileToFqnMap = fileToFqnMapCollector.fileToFqnMap
             logger.log(
