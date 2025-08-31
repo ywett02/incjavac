@@ -20,6 +20,13 @@ class FileDigestStorage private constructor(
         return dataStorage.load()
     }
 
+    fun remove(key: File) {
+        val data = load() ?: return
+
+        val result = data.toMutableMap().apply { remove(key) }
+        dataStorage.save(result)
+    }
+
     companion object {
         private const val STORAGE_FILE_NAME = "fileDigest.json"
 

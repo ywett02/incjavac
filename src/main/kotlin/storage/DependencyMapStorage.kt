@@ -28,6 +28,13 @@ class DependencyMapStorage constructor(
         return dataStorage.load()
     }
 
+    fun remove(key: FqName) {
+        val data = load() ?: return
+
+        val result = data.toMutableMap().apply { remove(key) }
+        dataStorage.save(result)
+    }
+
     companion object {
         private const val STORAGE_FILE_NAME = "dependencyMap.json"
 
