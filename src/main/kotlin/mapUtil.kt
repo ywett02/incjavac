@@ -1,12 +1,14 @@
 package com.example.assignment
 
-fun Map<String, Set<String>>.joinToString(): String =
+import com.example.assignment.entity.FqName
+
+fun Map<FqName, Set<FqName>>.joinToString(): String =
     buildString {
         for ((outerKey, innerSet) in this@joinToString) {
-            append(outerKey)
+            append(outerKey.toString())
             append("\n")
             for (innerKey in innerSet) {
-                append("  $innerKey")
+                append("  ${innerKey.toString()}")
                 append("\n")
             }
         }

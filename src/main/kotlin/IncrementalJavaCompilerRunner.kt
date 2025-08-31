@@ -1,5 +1,7 @@
 package com.example.assignment
 
+import com.example.assignment.collector.DependencyMapCollector
+import com.example.assignment.storage.DependencyMapStorage
 import java.util.logging.Level
 import java.util.logging.Logger
 import javax.tools.JavaCompiler
@@ -26,15 +28,15 @@ class IncrementalJavaCompilerRunner(
         )
         val result = compiler.run(null, null, null, *javaCompilerArguments.toTypedArray())
 
-        val depGraph = ClassDependencyGraphBuilder().buildGraph(incrementalJavaCompilerArguments.directory)
+        val depGraph = DependencyMapCollector().collectDependencies(incrementalJavaCompilerArguments.directory)
         logger.log(
             Level.INFO,
             """Dependency graph created: [
                 |${depGraph.joinToString()}
                 |]""".trimMargin()
         )
-        val graphStore = ClassDependencyGraphStore.create(incrementalJavaCompilerArguments.cacheDir)
-        graphStore.store(depGraph)
+        val graphStore = DependencyMapStorage.create(incrementalJavaCompilerArguments.cacheDir)
+        graphStore.save(depGraph)
 
         return result
     }

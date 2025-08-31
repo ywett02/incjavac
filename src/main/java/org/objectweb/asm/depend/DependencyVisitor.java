@@ -29,6 +29,7 @@
  */
 package org.objectweb.asm.depend;
 
+import com.example.assignment.entity.FqName;
 import org.objectweb.asm.*;
 import org.objectweb.asm.signature.SignatureReader;
 import org.objectweb.asm.signature.SignatureVisitor;
@@ -45,11 +46,11 @@ import java.util.Set;
  */
 public class DependencyVisitor extends ClassVisitor {
 
-    Map<String, Set<String>> groups = new HashMap<String, Set<String>>();
+    Map<FqName, Set<FqName>> groups = new HashMap<FqName, Set<FqName>>();
 
-    Set<String> current;
+    Set<FqName> current;
 
-    public Map<String, Set<String>> getGlobals() {
+    public Map<FqName, Set<FqName>> getGlobals() {
         return groups;
     }
 
@@ -299,8 +300,8 @@ public class DependencyVisitor extends ClassVisitor {
         current.add(binaryName(name));
     }
 
-    private String binaryName(String name) {
-        return name.replaceAll("[/]", ".");
+    private FqName binaryName(String name) {
+        return new FqName(name.replaceAll("[/]", "."));
     }
 
     void addInternalName(final String name) {
