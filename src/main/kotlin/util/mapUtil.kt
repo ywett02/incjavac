@@ -1,4 +1,4 @@
-package com.example.assignment
+package com.example.assignment.util
 
 import com.example.assignment.entity.FqName
 
