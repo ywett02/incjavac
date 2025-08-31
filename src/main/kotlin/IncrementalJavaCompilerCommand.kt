@@ -16,7 +16,9 @@ class IncrementalJavaCompilerCommand private constructor() {
         required = true,
         handler = FileOptionHandler::class
     )
-    private var src: File? = null
+    private var _src: File? = null
+    val src: File
+        get() = requireNotNull(_src)
 
     @Option(
         name = "-cp",
@@ -24,7 +26,7 @@ class IncrementalJavaCompilerCommand private constructor() {
         usage = "List of directories and JAR/ZIP archives to search for class files",
         required = false,
     )
-    private var classpath: String? = null
+    var classpath: String? = null
 
     @Option(
         name = "-d",
@@ -32,7 +34,7 @@ class IncrementalJavaCompilerCommand private constructor() {
         required = false,
         handler = FileOptionHandler::class
     )
-    private var directory: File? = null
+    var directory: File? = null
 
     @Option(
         name = "-cd",
@@ -41,7 +43,7 @@ class IncrementalJavaCompilerCommand private constructor() {
         required = true,
         handler = FileOptionHandler::class
     )
-    private var cacheDir: File? = null
+    var cacheDir: File? = null
 
     companion object {
         private val logger: Logger =
@@ -64,7 +66,7 @@ class IncrementalJavaCompilerCommand private constructor() {
             return try {
                 parser.parseArgument(*args)
                 IncrementalJavaCompilerArguments(
-                    requireNotNull(incrementalJavaCompilerCommand.src),
+                    incrementalJavaCompilerCommand.src,
                     requireNotNull(incrementalJavaCompilerCommand.cacheDir),
                     requireNotNull(incrementalJavaCompilerCommand.directory),
                     incrementalJavaCompilerCommand.classpath
