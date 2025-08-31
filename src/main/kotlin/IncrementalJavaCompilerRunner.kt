@@ -1,10 +1,6 @@
 package com.example.assignment
 
-import com.example.assignment.analysis.DirtyFilesCalculator
-import com.example.assignment.analysis.FileChangesCalculator
-import com.example.assignment.analysis.FileToFqnMapCollector
-import com.example.assignment.analysis.StaleOutputCleaner
-import com.example.assignment.collector.DependencyMapCollector
+import com.example.assignment.analysis.*
 import com.example.assignment.entity.CompilationResult
 import com.example.assignment.entity.ExitCode
 import com.example.assignment.entity.ExitCode.COMPILATION_ERROR

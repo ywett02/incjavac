@@ -1,4 +1,4 @@
-package com.example.assignment.collector
+package com.example.assignment.analysis
 
 import com.example.assignment.entity.FqName
 import org.objectweb.asm.ClassReader

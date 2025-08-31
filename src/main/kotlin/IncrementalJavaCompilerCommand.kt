@@ -1,9 +1,9 @@
 package com.example.assignment
 
+import com.example.assignment.analysis.DependencyMapCollector
 import com.example.assignment.analysis.DirtyFilesCalculator
 import com.example.assignment.analysis.FileChangesCalculator
 import com.example.assignment.analysis.StaleOutputCleaner
-import com.example.assignment.collector.DependencyMapCollector
 import com.example.assignment.entity.ExitCode
 import com.example.assignment.storage.DependencyMapInMemoryStorage
 import com.example.assignment.storage.FileDigestInMemoryStorage
