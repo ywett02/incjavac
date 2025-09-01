@@ -1,6 +1,17 @@
 package com.example.assignment
 
+import org.kohsuke.args4j.CmdLineException
+import kotlin.system.exitProcess
+
 fun main(array: Array<String>) {
-    val exitCode = IncrementalJavaCompilerCommand.run(array)
-    println("Compilation result code: ${exitCode.code}")
+    try {
+        val exitCode = IncrementalJavaCompilerCommand.run(array)
+        println("Compilation result code: ${exitCode.code}")
+        exitProcess(0)
+    } catch (e: CmdLineException) {
+        exitProcess(2)
+    } catch (e: Throwable) {
+        println("incjavac tool failed: ${e.localizedMessage}")
+        exitProcess(1)
+    }
 }
