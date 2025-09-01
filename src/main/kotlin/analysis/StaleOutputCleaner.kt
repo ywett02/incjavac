@@ -55,14 +55,7 @@ class StaleOutputCleaner(
         }
     }
 
-    fun rollback() {
-        deletedClasses.forEach { file ->
-            if (!file.createNewFile()) {
-                println("Failed to rollback $file")
-            } else {
-                println("$file was re-created ")
-            }
-
-        }
+    private fun deleteFileToFqnEdge(removedFiles: List<File>) {
+        removedFiles.forEach { file -> fileToFqnMapInMemoryStorage.remove(file) }
     }
 }

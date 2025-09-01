@@ -52,7 +52,6 @@ class IncrementalJavaCompilerRunner(
                 }
 
             if (exitCode != OK) {
-                staleOutputCleaner.rollback()
                 return exitCode
             }
 

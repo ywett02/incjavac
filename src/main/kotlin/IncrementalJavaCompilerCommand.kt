@@ -101,11 +101,9 @@ class IncrementalJavaCompilerCommand private constructor() {
 
             val exitCode = incrementalJavaCompilerRunner.compile(incrementalJavaCompilerContext)
 
-            if (exitCode == ExitCode.OK) {
-                fileDigestInMemoryStorage.close()
-                fileToFqnMapInMemoryStorage.close()
-                dependencyMapInMemoryStorage.close()
-            }
+            fileDigestInMemoryStorage.close()
+            fileToFqnMapInMemoryStorage.close()
+            dependencyMapInMemoryStorage.close()
 
             return exitCode
         }
