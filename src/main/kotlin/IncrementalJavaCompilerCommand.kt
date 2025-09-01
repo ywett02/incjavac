@@ -97,8 +97,8 @@ class IncrementalJavaCompilerCommand private constructor() {
                     FileChangesCalculator(fileDigestInMemoryStorage),
                     ClasspathChangeCalculator(classpathDigestInMemoryStorage),
                     DirtyFilesCalculator(fileToFqnMapInMemoryStorage, dependencyMapInMemoryStorage),
-                    DependencyMapCollector(dependencyMapInMemoryStorage, eventReporter),
-                    FileToFqnMapCollectorFactory(fileToFqnMapInMemoryStorage, eventReporter),
+                    DependencyMapCollector(dependencyMapInMemoryStorage),
+                    FileToFqnMapCollectorFactory(fileToFqnMapInMemoryStorage),
                     StaleOutputCleaner(fileToFqnMapInMemoryStorage),
                     eventReporter
                 )

@@ -1,9 +1,7 @@
 package com.example.assignment.analysis
 
-import com.example.assignment.EventReporter
 import com.example.assignment.entity.FqName
 import com.example.assignment.storage.FileToFqnMapInMemoryStorage
-import com.example.assignment.util.joinToString
 import com.sun.source.util.TaskEvent
 import com.sun.source.util.TaskListener
 import java.io.File
@@ -12,8 +10,7 @@ import javax.tools.JavaFileObject
 
 class FileToFqnMapCollector(
     private val elements: Elements,
-    private val fqnMapInMemoryStorage: FileToFqnMapInMemoryStorage,
-    private val eventReporter: EventReporter
+    private val fqnMapInMemoryStorage: FileToFqnMapInMemoryStorage
 ) : TaskListener {
 
     private val fileToFqnMap: MutableMap<File, MutableSet<FqName>> = mutableMapOf()
@@ -34,11 +31,6 @@ class FileToFqnMapCollector(
         if (e.kind != TaskEvent.Kind.GENERATE) {
             return
         }
-
-        eventReporter.reportEvent(
-            """File to FQN entry created: [
-                |${fileToFqnMap.joinToString({ it.absolutePath }, { it.id })}]""".trimMargin()
-        )
 
         fqnMapInMemoryStorage.addAll(fileToFqnMap)
         fileToFqnMap.clear()
