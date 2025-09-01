@@ -44,8 +44,8 @@ class IncrementalJavaCompilerCommand private constructor() {
         handler = FileOptionHandler::class
     )
     private var _directory: File? = null
-    val directory: File?
-        get() = _directory
+    val directory: File
+        get() = _directory ?: src.parentFile.resolve(DEFAULT_DIRECTORY_DIR_NAME)
 
     @Option(
         name = "-cd",
@@ -69,6 +69,7 @@ class IncrementalJavaCompilerCommand private constructor() {
 
     companion object {
         private const val DEFAULT_CACHE_DIR_NAME = "cache"
+        private const val DEFAULT_DIRECTORY_DIR_NAME = "classes"
 
         fun run(args: Array<String>): ExitCode {
             val incrementalJavaCompilerCommand = createCommand(args)

@@ -159,10 +159,8 @@ class IncrementalJavaCompilerRunner(
             add("-cp")
             add(classpath)
 
-            if (incrementalJavaCompilerContext.directory != null) {
-                add("-d")
-                add(incrementalJavaCompilerContext.directory.absolutePath)
-            }
+            add("-d")
+            add(incrementalJavaCompilerContext.directory.absolutePath)
         }
     }
 
