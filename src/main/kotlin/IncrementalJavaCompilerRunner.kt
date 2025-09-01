@@ -74,7 +74,7 @@ class IncrementalJavaCompilerRunner(
         incrementalJavaCompilerContext: IncrementalJavaCompilerContext
     ): CompilationResult {
         try {
-            if (!incrementalJavaCompilerContext.cacheDir.exists()) {
+            if (!incrementalJavaCompilerContext.metadataDir.exists()) {
                 return CompilationResult.RequiresRecompilation("Required metadata doest not exist")
             }
 
@@ -139,7 +139,7 @@ class IncrementalJavaCompilerRunner(
 
     private fun createCompilationOptions(incrementalJavaCompilerContext: IncrementalJavaCompilerContext): Iterable<String> {
         val classpath = buildString {
-            append(incrementalJavaCompilerContext.directory.absolutePath)
+            append(incrementalJavaCompilerContext.outputDir.absolutePath)
 
             if (incrementalJavaCompilerContext.classpath != null) {
                 append(File.pathSeparator)
@@ -152,7 +152,7 @@ class IncrementalJavaCompilerRunner(
             add(classpath)
 
             add("-d")
-            add(incrementalJavaCompilerContext.directory.absolutePath)
+            add(incrementalJavaCompilerContext.outputDir.absolutePath)
         }
     }
 }

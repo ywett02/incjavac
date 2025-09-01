@@ -69,27 +69,28 @@ class IncrementalJavaCompilerCommand private constructor() {
         private const val DEFAULT_BUILD_DIR_NAME = "build"
         private const val DEFAULT_CACHE_DIR_NAME = "cache"
         private const val DEFAULT_DIRECTORY_DIR_NAME = "classes"
+        private const val DEFAULT_METADATA_DIR_NAME = "metadata"
 
         fun run(args: Array<String>): ExitCode {
             val incrementalJavaCompilerCommand = createCommand(args)
             val eventReporter = EventReporter(incrementalJavaCompilerCommand.debug)
             eventReporter.reportEvent("incJavac running with arguments: [${args.joinToString(separator = " ")}]")
 
-            val fileDigestInMemoryStorage = FileDigestInMemoryStorage.create(incrementalJavaCompilerCommand.cacheDir)
-            val classpathDigestInMemoryStorage =
-                ClasspathDigestInMemoryStorage.create(incrementalJavaCompilerCommand.cacheDir)
-            val fileToFqnMapInMemoryStorage =
-                FileToFqnMapInMemoryStorage.create(incrementalJavaCompilerCommand.cacheDir)
-            val dependencyMapInMemoryStorage =
-                DependencyMapInMemoryStorage.create(incrementalJavaCompilerCommand.cacheDir)
-
             val incrementalJavaCompilerContext = IncrementalJavaCompilerContext(
                 src = incrementalJavaCompilerCommand.src,
-                directory = incrementalJavaCompilerCommand.directory,
-                cacheDir = incrementalJavaCompilerCommand.cacheDir,
+                outputDir = incrementalJavaCompilerCommand.cacheDir.resolve(DEFAULT_DIRECTORY_DIR_NAME),
+                metadataDir = incrementalJavaCompilerCommand.cacheDir.resolve(DEFAULT_METADATA_DIR_NAME),
                 classpath = incrementalJavaCompilerCommand.classpath,
                 javaCompiler = ToolProvider.getSystemJavaCompiler()
             )
+
+            val fileDigestInMemoryStorage = FileDigestInMemoryStorage.create(incrementalJavaCompilerContext.metadataDir)
+            val classpathDigestInMemoryStorage =
+                ClasspathDigestInMemoryStorage.create(incrementalJavaCompilerContext.metadataDir)
+            val fileToFqnMapInMemoryStorage =
+                FileToFqnMapInMemoryStorage.create(incrementalJavaCompilerContext.metadataDir)
+            val dependencyMapInMemoryStorage =
+                DependencyMapInMemoryStorage.create(incrementalJavaCompilerContext.metadataDir)
 
             val incrementalJavaCompilerRunner =
                 IncrementalJavaCompilerRunner(
@@ -109,6 +110,12 @@ class IncrementalJavaCompilerCommand private constructor() {
                 classpathDigestInMemoryStorage.close()
                 fileToFqnMapInMemoryStorage.close()
                 dependencyMapInMemoryStorage.close()
+
+                incrementalJavaCompilerCommand.directory.deleteRecursively()
+                incrementalJavaCompilerContext.outputDir.copyRecursively(incrementalJavaCompilerCommand.directory)
+            } else {
+                incrementalJavaCompilerContext.outputDir.deleteRecursively()
+                incrementalJavaCompilerCommand.directory.copyRecursively(incrementalJavaCompilerContext.outputDir)
             }
 
             return exitCode

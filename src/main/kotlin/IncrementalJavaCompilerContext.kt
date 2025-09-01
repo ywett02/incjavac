@@ -7,28 +7,25 @@ import javax.tools.StandardLocation
 
 data class IncrementalJavaCompilerContext(
     val src: File,
-    val directory: File,
-    val cacheDir: File,
+    val outputDir: File,
+    val metadataDir: File,
     val classpath: String?,
     val javaCompiler: JavaCompiler
 ) {
 
     init {
-        require(src.isDirectory) { "Expected a valid source directory, but got: ${src.absolutePath}" }
-        directory.mkdirs()
+        if (outputDir.exists().not()) {
+            outputDir.mkdirs()
+        }
     }
 
     val sourceFiles = findJavaFiles(src)
 
     val javaFileManager: StandardJavaFileManager = javaCompiler.getStandardFileManager(null, null, null).apply {
-        setLocation(StandardLocation.CLASS_OUTPUT, setOf(directory))
+        setLocation(StandardLocation.CLASS_OUTPUT, setOf(outputDir))
     }
 
     private fun findJavaFiles(src: File): Set<File> {
-        if (src.isDirectory.not()) {
-            throw IllegalArgumentException("Provided path is not a directory: ${src.path}")
-        }
-
         return src.walk().filter { file -> file.name.endsWith(".java") }.toSet()
     }
 }
