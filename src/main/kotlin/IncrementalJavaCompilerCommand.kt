@@ -43,7 +43,7 @@ class IncrementalJavaCompilerCommand private constructor() {
     )
     private var _directory: File? = null
     val directory: File
-        get() = _directory ?: src.parentFile.resolve(DEFAULT_BUILD_DIR_NAME).resolve(DEFAULT_DIRECTORY_DIR_NAME)
+        get() = _directory ?: src.resolve(DEFAULT_BUILD_DIR_NAME).resolve(DEFAULT_DIRECTORY_DIR_NAME)
 
     @Option(
         name = "-cd",
@@ -54,7 +54,7 @@ class IncrementalJavaCompilerCommand private constructor() {
     )
     private var _cacheDir: File? = null
     val cacheDir: File
-        get() = _cacheDir ?: src.parentFile.resolve(DEFAULT_BUILD_DIR_NAME).resolve(DEFAULT_CACHE_DIR_NAME)
+        get() = _cacheDir ?: src.resolve(DEFAULT_BUILD_DIR_NAME).resolve(DEFAULT_CACHE_DIR_NAME)
 
     @Option(
         name = "--debug",
