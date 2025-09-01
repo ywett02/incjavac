@@ -52,10 +52,12 @@ class IncrementalJavaCompilerRunner(
                 }
 
             if (exitCode != OK) {
+                staleOutputCleaner.rollback()
                 return exitCode
             }
 
             dependencyMapCollector.collectDependencies(incrementalJavaCompilerContext)
+
             return exitCode
         } catch (e: Throwable) {
             eventReporter.reportEvent("Compilation failed due to internal error: ${e.message}")

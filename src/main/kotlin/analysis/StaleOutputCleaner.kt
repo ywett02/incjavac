@@ -2,25 +2,22 @@ package com.example.assignment.analysis
 
 import com.example.assignment.IncrementalJavaCompilerContext
 import com.example.assignment.entity.FqName
-import com.example.assignment.storage.DependencyMapInMemoryStorage
 import com.example.assignment.storage.FileToFqnMapInMemoryStorage
 import java.io.File
 import javax.tools.StandardLocation
 
 class StaleOutputCleaner(
     private val fileToFqnMapInMemoryStorage: FileToFqnMapInMemoryStorage,
-    private val dependencyMapInMemoryStorage: DependencyMapInMemoryStorage,
 ) {
+
+    private val deletedClasses: MutableSet<File> = mutableSetOf()
 
     fun cleanStaleOutput(removedFiles: List<File>, incrementalJavaCompilerContext: IncrementalJavaCompilerContext) {
         if (removedFiles.isEmpty()) {
             return
         }
 
-        val classesToRemove = getClassesToRemove(removedFiles, incrementalJavaCompilerContext)
-        deleteClasses(classesToRemove.values)
-        deleteDependencies(classesToRemove.keys)
-        deleteFileToFqnEdge(removedFiles)
+        deleteClasses(getClassesToRemove(removedFiles, incrementalJavaCompilerContext).values)
     }
 
     private fun getClassesToRemove(
@@ -52,16 +49,20 @@ class StaleOutputCleaner(
             if (!file.delete()) {
                 println("Failed to delete $file")
             } else {
-                println("$file Failed to delete ")
+                println("$file was deleted ")
+                deletedClasses.add(file)
             }
         }
     }
 
-    private fun deleteDependencies(keys: Set<FqName>) {
-        keys.forEach { fqn -> dependencyMapInMemoryStorage.remove(fqn) }
-    }
+    fun rollback() {
+        deletedClasses.forEach { file ->
+            if (!file.createNewFile()) {
+                println("Failed to rollback $file")
+            } else {
+                println("$file was re-created ")
+            }
 
-    private fun deleteFileToFqnEdge(removedFiles: List<File>) {
-        removedFiles.forEach { file -> fileToFqnMapInMemoryStorage.remove(file) }
+        }
     }
 }
