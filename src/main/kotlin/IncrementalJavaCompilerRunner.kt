@@ -8,8 +8,6 @@ import com.example.assignment.entity.ExitCode.OK
 import com.example.assignment.entity.FileChanges
 import com.sun.source.util.JavacTask
 import java.io.File
-import javax.tools.JavaFileObject
-import javax.tools.StandardLocation
 
 class IncrementalJavaCompilerRunner(
     private val fileChangesCalculator: FileChangesCalculator,
@@ -131,12 +129,7 @@ class IncrementalJavaCompilerRunner(
 
 
     private fun createCompilationOptions(incrementalJavaCompilerContext: IncrementalJavaCompilerContext): Iterable<String> {
-        val classFiles = incrementalJavaCompilerContext.javaFileManager.list(
-            StandardLocation.CLASS_OUTPUT,
-            "",
-            setOf(JavaFileObject.Kind.CLASS),
-            true
-        )
+        val classFiles = incrementalJavaCompilerContext.classObjects
             .map { javaFileObject ->
                 File(javaFileObject.toUri())
             }.joinToString(separator = File.pathSeparator, transform = { file -> file.absolutePath })
