@@ -11,7 +11,6 @@ class FileChangesCalculator(
 
     fun calculateFileChanges(sourceFiles: Set<File>): FileChanges {
         val currentMetadata = sourceFiles.associate { file -> file.absoluteFile to file.md5 }
-        //TODO: handle the first run
         val previousMetadata = fileDigestInMemoryStorage.get()
 
         val fileChanges = FileChanges(

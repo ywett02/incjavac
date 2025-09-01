@@ -11,6 +11,7 @@ import java.io.File
 
 class IncrementalJavaCompilerRunner(
     private val fileChangesCalculator: FileChangesCalculator,
+    private val classpathChangeCalculator: ClasspathChangeCalculator,
     private val dirtyFilesCalculator: DirtyFilesCalculator,
     private val dependencyMapCollector: DependencyMapCollector,
     private val fileToFqnMapCollectorFactory: FileToFqnMapCollectorFactory,
@@ -26,9 +27,12 @@ class IncrementalJavaCompilerRunner(
                 |Removed files: [${fileChanges.removedFiles.joinToString()}]
             """.trimMargin()
             )
+            val hasClasspathChanged =
+                classpathChangeCalculator.hasClasspathChanged(incrementalJavaCompilerContext.classpath)
 
             val exitCode =
-                when (val compilationResult = tryCompileIncrementally(fileChanges, incrementalJavaCompilerContext)) {
+                when (val compilationResult =
+                    tryCompileIncrementally(fileChanges, hasClasspathChanged, incrementalJavaCompilerContext)) {
                     is CompilationResult.RequiresRecompilation -> {
                         eventReporter.reportEvent("Non-incremental compilation will be performed: ${compilationResult.message}")
                         runCompilation(incrementalJavaCompilerContext.sourceFiles, incrementalJavaCompilerContext)
@@ -66,11 +70,16 @@ class IncrementalJavaCompilerRunner(
 
     private fun tryCompileIncrementally(
         fileChanges: FileChanges,
+        hasClasspathChanged: Boolean,
         incrementalJavaCompilerContext: IncrementalJavaCompilerContext
     ): CompilationResult {
         try {
             if (!incrementalJavaCompilerContext.cacheDir.exists()) {
                 return CompilationResult.RequiresRecompilation("Required metadata doest not exist")
+            }
+
+            if (hasClasspathChanged) {
+                return CompilationResult.RequiresRecompilation("Classpath has changed")
             }
 
             val dirtyFiles = dirtyFilesCalculator.calculateDirtyFiles(fileChanges)

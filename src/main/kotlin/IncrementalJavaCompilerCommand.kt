@@ -2,6 +2,7 @@ package com.example.assignment
 
 import com.example.assignment.analysis.*
 import com.example.assignment.entity.ExitCode
+import com.example.assignment.storage.ClasspathDigestInMemoryStorage
 import com.example.assignment.storage.DependencyMapInMemoryStorage
 import com.example.assignment.storage.FileDigestInMemoryStorage
 import com.example.assignment.storage.FileToFqnMapInMemoryStorage
@@ -75,6 +76,8 @@ class IncrementalJavaCompilerCommand private constructor() {
             eventReporter.reportEvent("incJavac running with arguments: [${args.joinToString(separator = " ")}]")
 
             val fileDigestInMemoryStorage = FileDigestInMemoryStorage.create(incrementalJavaCompilerCommand.cacheDir)
+            val classpathDigestInMemoryStorage =
+                ClasspathDigestInMemoryStorage.create(incrementalJavaCompilerCommand.cacheDir)
             val fileToFqnMapInMemoryStorage =
                 FileToFqnMapInMemoryStorage.create(incrementalJavaCompilerCommand.cacheDir)
             val dependencyMapInMemoryStorage =
@@ -84,6 +87,7 @@ class IncrementalJavaCompilerCommand private constructor() {
             val incrementalJavaCompilerRunner =
                 IncrementalJavaCompilerRunner(
                     FileChangesCalculator(fileDigestInMemoryStorage),
+                    ClasspathChangeCalculator(classpathDigestInMemoryStorage),
                     DirtyFilesCalculator(fileToFqnMapInMemoryStorage, dependencyMapInMemoryStorage),
                     DependencyMapCollector(dependencyMapInMemoryStorage, eventReporter),
                     FileToFqnMapCollectorFactory(fileToFqnMapInMemoryStorage, eventReporter),
@@ -102,6 +106,7 @@ class IncrementalJavaCompilerCommand private constructor() {
             val exitCode = incrementalJavaCompilerRunner.compile(incrementalJavaCompilerContext)
 
             fileDigestInMemoryStorage.close()
+            classpathDigestInMemoryStorage.close()
             fileToFqnMapInMemoryStorage.close()
             dependencyMapInMemoryStorage.close()
 
