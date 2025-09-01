@@ -129,13 +129,8 @@ class IncrementalJavaCompilerRunner(
 
 
     private fun createCompilationOptions(incrementalJavaCompilerContext: IncrementalJavaCompilerContext): Iterable<String> {
-        val classFiles = incrementalJavaCompilerContext.classObjects
-            .map { javaFileObject ->
-                File(javaFileObject.toUri())
-            }.joinToString(separator = File.pathSeparator, transform = { file -> file.absolutePath })
-
         val classpath = buildString {
-            append(classFiles)
+            append(incrementalJavaCompilerContext.directory.absolutePath)
 
             if (incrementalJavaCompilerContext.classpath != null) {
                 append(File.pathSeparator)
