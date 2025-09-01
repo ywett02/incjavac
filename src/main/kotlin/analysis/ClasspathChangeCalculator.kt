@@ -14,18 +14,21 @@ class ClasspathChangeCalculator(
     }
 
     private fun hasClasspathChanged(classpathItems: Set<File>): Boolean {
-        val currentMetadata = classpathItems.flatMap { item ->
-            when {
-                item.isFile -> setOf(item)
-                item.isDirectory -> findClassFiles(item)
-                else -> {
-                    throw IllegalArgumentException(
-                        "Invalid classpath entry: ${item.absolutePath}. " +
-                                "Expected a JAR/ZIP file or a directory."
-                    )
+        val currentMetadata = classpathItems
+            .flatMap { item ->
+                when {
+                    item.isFile -> setOf(item)
+                    item.isDirectory -> findClassFiles(item)
+                    else -> {
+                        throw IllegalArgumentException(
+                            "Invalid classpath entry: ${item.absolutePath}. " +
+                                    "Expected a JAR/ZIP file or a directory."
+                        )
+                    }
                 }
-            }
-        }.associateWith { item -> item.md5 }
+            }.map { file ->
+                file.absoluteFile
+            }.associateWith { item -> item.md5 }
         val previousMetadata = classpathDigestInMemoryStorage.get()
 
         classpathDigestInMemoryStorage.set(currentMetadata)
