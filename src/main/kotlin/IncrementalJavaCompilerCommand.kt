@@ -51,7 +51,7 @@ class IncrementalJavaCompilerCommand private constructor() {
         name = "-cd",
         aliases = ["-cacheDir"],
         usage = "Directory where cache files will be stored",
-        required = true,
+        required = false,
         handler = FileOptionHandler::class
     )
     private var _cacheDir: File? = null
