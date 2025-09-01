@@ -6,7 +6,6 @@ import com.example.assignment.entity.ExitCode
 import com.example.assignment.entity.ExitCode.COMPILATION_ERROR
 import com.example.assignment.entity.ExitCode.OK
 import com.example.assignment.entity.FileChanges
-import com.example.assignment.storage.DependencyMapInMemoryStorage
 import com.example.assignment.storage.FileToFqnMapInMemoryStorage
 import com.example.assignment.util.joinToString
 import com.sun.source.util.JavacTask
@@ -24,7 +23,6 @@ class IncrementalJavaCompilerRunner(
     private val dependencyMapCollector: DependencyMapCollector,
     private val staleOutputCleaner: StaleOutputCleaner,
     private val fileToFqnMapInMemoryStorage: FileToFqnMapInMemoryStorage,
-    private val dependencyMapInMemoryStorage: DependencyMapInMemoryStorage,
     private val eventReporter: EventReporter
 ) {
 
@@ -52,7 +50,7 @@ class IncrementalJavaCompilerRunner(
                     compilationResult.exitCode
                 }
             }
-            collectDependencies()
+            collectDependencies(incrementalJavaCompilerContext)
 
             return exitCode
         } catch (e: Throwable) {
@@ -164,17 +162,8 @@ class IncrementalJavaCompilerRunner(
         }
     }
 
-    private fun collectDependencies() {
-        fileManager.list(StandardLocation.CLASS_OUTPUT, "", setOf(JavaFileObject.Kind.CLASS), true)
-            .forEach { javaFileObject ->
-                dependencyMapCollector.collectDependencies(File(javaFileObject.toUri()))
-            }
-
-        eventReporter.reportEvent(
-            """Dependency graph created: [
-                |${dependencyMapCollector.dependencyMap.joinToString({ it.id }, { it.id })}]""".trimMargin()
-        )
-        dependencyMapInMemoryStorage.set(dependencyMapCollector.dependencyMap)
+    private fun collectDependencies(incrementalJavaCompilerContext: IncrementalJavaCompilerContext) {
+        dependencyMapCollector.collectDependencies(incrementalJavaCompilerContext.directory)
     }
 
     private fun cleanStaleOutput(changes: FileChanges) {
