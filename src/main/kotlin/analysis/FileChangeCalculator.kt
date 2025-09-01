@@ -26,7 +26,7 @@ class FileChangesCalculator(
     private fun calculateAddedAndModifiedFiles(
         currentMetadata: Map<File, String>,
         previousMetadata: Map<File, String>
-    ): List<File> = buildList {
+    ): Set<File> = buildSet {
         for ((file, digest) in currentMetadata) {
             if (previousMetadata[file] != digest) {
                 add(file)
@@ -37,7 +37,7 @@ class FileChangesCalculator(
     private fun calculateRemovedFiles(
         currentMetadata: Map<File, String>,
         previousMetadata: Map<File, String>
-    ): List<File> = buildList {
+    ): Set<File> = buildSet {
         for ((file, _) in previousMetadata) {
             if (!currentMetadata.containsKey(file)) {
                 add(file)
