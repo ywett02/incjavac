@@ -26,28 +26,42 @@ class IncrementalJavaCompilerRunner(
 
     fun compile(incrementalJavaCompilerContext: IncrementalJavaCompilerContext): ExitCode {
         try {
-            val exitCode = when (val compilationResult = tryCompileIncrementally(incrementalJavaCompilerContext)) {
-                is CompilationResult.RequiresRecompilation -> {
-                    eventReporter.reportEvent("Non-incremental compilation will be performed: ${compilationResult.message}")
-                    runCompilation(incrementalJavaCompilerContext.sourceFiles, incrementalJavaCompilerContext)
+            val fileChanges = fileChangesCalculator.calculateFileChanges(incrementalJavaCompilerContext.sourceFiles)
+            eventReporter.reportEvent(
+                """Added or modified files: [${fileChanges.addedAndModifiedFiles.joinToString()}]
+                |Removed files: [${fileChanges.removedFiles.joinToString()}]
+            """.trimMargin()
+            )
+
+            val exitCode =
+                when (val compilationResult = tryCompileIncrementally(fileChanges, incrementalJavaCompilerContext)) {
+                    is CompilationResult.RequiresRecompilation -> {
+                        eventReporter.reportEvent("Non-incremental compilation will be performed: ${compilationResult.message}")
+                        runCompilation(incrementalJavaCompilerContext.sourceFiles, incrementalJavaCompilerContext)
+                    }
+
+                    is CompilationResult.Error -> {
+                        eventReporter.reportEvent(
+                            "Incremental compilation failed, non-incremental compilation will be performed"
+                        )
+
+                        runCompilation(incrementalJavaCompilerContext.sourceFiles, incrementalJavaCompilerContext)
+                    }
+
+                    is CompilationResult.Success -> {
+                        eventReporter.reportEvent(
+                            "Incremental compilation completed"
+                        )
+
+                        compilationResult.exitCode
+                    }
                 }
 
-                is CompilationResult.Error -> {
-                    eventReporter.reportEvent(
-                        "Incremental compilation failed, non-incremental compilation will be performed"
-                    )
-
-                    runCompilation(incrementalJavaCompilerContext.sourceFiles, incrementalJavaCompilerContext)
-                }
-
-                is CompilationResult.Success -> {
-                    eventReporter.reportEvent(
-                        "Incremental compilation completed"
-                    )
-
-                    compilationResult.exitCode
-                }
+            if (exitCode != OK) {
+                return exitCode
             }
+
+            cleanStaleOutput(fileChanges)
             collectDependencies(incrementalJavaCompilerContext)
 
             return exitCode
@@ -57,15 +71,11 @@ class IncrementalJavaCompilerRunner(
         }
     }
 
-    private fun tryCompileIncrementally(incrementalJavaCompilerContext: IncrementalJavaCompilerContext): CompilationResult {
+    private fun tryCompileIncrementally(
+        fileChanges: FileChanges,
+        incrementalJavaCompilerContext: IncrementalJavaCompilerContext
+    ): CompilationResult {
         try {
-            val fileChanges = fileChangesCalculator.calculateFileChanges(incrementalJavaCompilerContext.sourceFiles)
-            eventReporter.reportEvent(
-                """Added or modified files: [${fileChanges.addedAndModifiedFiles.joinToString()}]
-                |Removed files: [${fileChanges.removedFiles.joinToString()}]
-            """.trimMargin()
-            )
-
             if (!incrementalJavaCompilerContext.cacheDir.exists()) {
                 return CompilationResult.RequiresRecompilation("Required metadata doest not exist")
             }
@@ -79,10 +89,7 @@ class IncrementalJavaCompilerRunner(
                 return CompilationResult.Success(OK)
             }
 
-            val result = CompilationResult.Success(runCompilation(dirtyFiles, incrementalJavaCompilerContext))
-            cleanStaleOutput(fileChanges)
-
-            return result
+            return CompilationResult.Success(runCompilation(dirtyFiles, incrementalJavaCompilerContext))
         } catch (e: Throwable) {
             eventReporter.reportEvent(
                 "Compilation failed due to internal error: ${e.message}"
