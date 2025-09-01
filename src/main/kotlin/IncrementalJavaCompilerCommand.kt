@@ -59,7 +59,7 @@ class IncrementalJavaCompilerCommand private constructor() {
         get() = _cacheDir ?: src.parentFile.resolve(DEFAULT_CACHE_DIR_NAME)
 
     @Option(
-        name = "-debug",
+        name = "--debug",
         usage = "Enable debug mode",
         required = false
     )
