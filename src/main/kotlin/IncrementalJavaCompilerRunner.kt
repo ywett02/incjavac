@@ -61,8 +61,8 @@ class IncrementalJavaCompilerRunner(
                 return exitCode
             }
 
-            cleanStaleOutput(fileChanges)
-            collectDependencies(incrementalJavaCompilerContext)
+            staleOutputCleaner.cleanStaleOutput(fileChanges.removedFiles, fileManager)
+            dependencyMapCollector.collectDependencies(incrementalJavaCompilerContext.directory)
 
             return exitCode
         } catch (e: Throwable) {
@@ -155,13 +155,5 @@ class IncrementalJavaCompilerRunner(
             add("-d")
             add(incrementalJavaCompilerContext.directory.absolutePath)
         }
-    }
-
-    private fun collectDependencies(incrementalJavaCompilerContext: IncrementalJavaCompilerContext) {
-        dependencyMapCollector.collectDependencies(incrementalJavaCompilerContext.directory)
-    }
-
-    private fun cleanStaleOutput(changes: FileChanges) {
-        staleOutputCleaner.cleanStaleOutput(changes.removedFiles, fileManager)
     }
 }
