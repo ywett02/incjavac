@@ -23,10 +23,6 @@ class ClasspathDigestInMemoryStorage private constructor(
         return inMemoryData
     }
 
-    fun remove(key: File) {
-        inMemoryData.remove(key)
-    }
-
     override fun close() {
         dataStorage.save(inMemoryData)
         inMemoryData.clear()

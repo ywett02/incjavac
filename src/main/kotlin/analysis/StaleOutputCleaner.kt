@@ -18,6 +18,7 @@ class StaleOutputCleaner(
         }
 
         deleteClasses(getClassesToRemove(removedFiles, incrementalJavaCompilerContext).values)
+        deleteFileToFqnEdge(removedFiles)
     }
 
     private fun getClassesToRemove(

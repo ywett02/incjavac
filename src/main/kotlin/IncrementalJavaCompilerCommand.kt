@@ -83,7 +83,6 @@ class IncrementalJavaCompilerCommand private constructor() {
             val dependencyMapInMemoryStorage =
                 DependencyMapInMemoryStorage.create(incrementalJavaCompilerCommand.cacheDir)
 
-            val javaCompiler = ToolProvider.getSystemJavaCompiler()
             val incrementalJavaCompilerRunner =
                 IncrementalJavaCompilerRunner(
                     FileChangesCalculator(fileDigestInMemoryStorage),
@@ -117,7 +116,7 @@ class IncrementalJavaCompilerCommand private constructor() {
             val incrementalJavaCompilerCommand = IncrementalJavaCompilerCommand()
             val parser = CmdLineParser(incrementalJavaCompilerCommand)
 
-            return try {
+            try {
                 parser.parseArgument(*args)
                 return incrementalJavaCompilerCommand
             } catch (cmdException: CmdLineException) {

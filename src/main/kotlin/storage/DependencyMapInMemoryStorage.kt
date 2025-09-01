@@ -25,12 +25,6 @@ class DependencyMapInMemoryStorage constructor(
         return inMemoryData
     }
 
-    fun remove(key: FqName) {
-        inMemoryData.remove(key)
-    }
-
-    fun exists() = dataStorage.exists()
-
     override fun close() {
         dataStorage.save(inMemoryData)
         inMemoryData.clear()
