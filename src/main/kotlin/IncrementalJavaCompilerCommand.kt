@@ -83,6 +83,14 @@ class IncrementalJavaCompilerCommand private constructor() {
             val dependencyMapInMemoryStorage =
                 DependencyMapInMemoryStorage.create(incrementalJavaCompilerCommand.cacheDir)
 
+            val incrementalJavaCompilerContext = IncrementalJavaCompilerContext(
+                src = incrementalJavaCompilerCommand.src,
+                directory = incrementalJavaCompilerCommand.directory,
+                cacheDir = incrementalJavaCompilerCommand.cacheDir,
+                classpath = incrementalJavaCompilerCommand.classpath,
+                javaCompiler = ToolProvider.getSystemJavaCompiler()
+            )
+
             val incrementalJavaCompilerRunner =
                 IncrementalJavaCompilerRunner(
                     FileChangesCalculator(fileDigestInMemoryStorage),
@@ -93,14 +101,6 @@ class IncrementalJavaCompilerCommand private constructor() {
                     StaleOutputCleaner(fileToFqnMapInMemoryStorage),
                     eventReporter
                 )
-
-            val incrementalJavaCompilerContext = IncrementalJavaCompilerContext(
-                src = incrementalJavaCompilerCommand.src,
-                directory = incrementalJavaCompilerCommand.directory,
-                cacheDir = incrementalJavaCompilerCommand.cacheDir,
-                classpath = incrementalJavaCompilerCommand.classpath,
-                javaCompiler = ToolProvider.getSystemJavaCompiler()
-            )
 
             val exitCode = incrementalJavaCompilerRunner.compile(incrementalJavaCompilerContext)
 
