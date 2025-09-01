@@ -1,11 +1,10 @@
 package com.example.assignment.analysis
 
+import com.example.assignment.IncrementalJavaCompilerContext
 import com.example.assignment.entity.FqName
 import com.example.assignment.storage.DependencyMapInMemoryStorage
 import com.example.assignment.storage.FileToFqnMapInMemoryStorage
 import java.io.File
-import javax.tools.JavaFileObject
-import javax.tools.StandardJavaFileManager
 import javax.tools.StandardLocation
 
 class StaleOutputCleaner(
@@ -13,15 +12,18 @@ class StaleOutputCleaner(
     private val dependencyMapInMemoryStorage: DependencyMapInMemoryStorage,
 ) {
 
-    fun cleanStaleOutput(removedFiles: List<File>, fileManager: StandardJavaFileManager) {
-        val classesToRemove = getClassesToRemove(removedFiles, fileManager)
+    fun cleanStaleOutput(removedFiles: List<File>, incrementalJavaCompilerContext: IncrementalJavaCompilerContext) {
+        val classesToRemove = getClassesToRemove(removedFiles, incrementalJavaCompilerContext)
 
         deleteClasses(classesToRemove.values)
         deleteDependencies(classesToRemove.keys)
         deleteFileToFqnEdge(removedFiles)
     }
 
-    private fun getClassesToRemove(removedFiles: List<File>, fileManager: StandardJavaFileManager): Map<FqName, File> {
+    private fun getClassesToRemove(
+        removedFiles: List<File>,
+        incrementalJavaCompilerContext: IncrementalJavaCompilerContext
+    ): Map<FqName, File> {
         val fileToFqnMap = fileToFqnMapInMemoryStorage.get()
 
         val fqnToRemove: Set<FqName> = removedFiles
@@ -29,10 +31,10 @@ class StaleOutputCleaner(
                 fileToFqnMap.getOrDefault(file, emptySet())
             }.toSet()
 
-        return fileManager.list(StandardLocation.CLASS_OUTPUT, "", setOf(JavaFileObject.Kind.CLASS), true)
+        return incrementalJavaCompilerContext.classObjects
             .associate { javaFileObject ->
                 FqName(
-                    fileManager.inferBinaryName(
+                    incrementalJavaCompilerContext.javaFileManager.inferBinaryName(
                         StandardLocation.CLASS_OUTPUT,
                         javaFileObject
                     )

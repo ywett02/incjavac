@@ -57,7 +57,7 @@ class IncrementalJavaCompilerRunner(
                 return exitCode
             }
 
-            //      staleOutputCleaner.cleanStaleOutput(fileChanges.removedFiles, fileManager)
+            staleOutputCleaner.cleanStaleOutput(fileChanges.removedFiles, incrementalJavaCompilerContext)
             dependencyMapCollector.collectDependencies(incrementalJavaCompilerContext)
 
             return exitCode
