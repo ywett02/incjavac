@@ -32,8 +32,4 @@
 ./gradlew install
 export PATH="$PWD/build/install/incjavac/bin:$PATH"
 incjavac -src example-basic/src
-
-# Or create executable JAR
-./gradlew jar
-java -jar build/libs/incjavac-1.0-SNAPSHOT.jar -src example-basic/src
 ```
