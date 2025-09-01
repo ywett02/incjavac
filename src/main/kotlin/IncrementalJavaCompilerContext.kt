@@ -5,6 +5,7 @@ import java.io.File
 data class IncrementalJavaCompilerContext(
     val src: File,
     val directory: File,
+    val cacheDir: File,
     val classpath: String?,
 ) {
 

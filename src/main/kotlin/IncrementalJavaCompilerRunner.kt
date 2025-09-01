@@ -70,7 +70,7 @@ class IncrementalJavaCompilerRunner(
             """.trimMargin()
             )
 
-            if (!fileToFqnMapInMemoryStorage.exists() || !dependencyMapInMemoryStorage.exists()) {
+            if (!incrementalJavaCompilerContext.cacheDir.exists()) {
                 return CompilationResult.RequiresRecompilation("Required metadata doest not exist")
             }
 

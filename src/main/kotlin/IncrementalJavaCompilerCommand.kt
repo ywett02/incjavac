@@ -98,9 +98,10 @@ class IncrementalJavaCompilerCommand private constructor() {
                 )
 
             val incrementalJavaCompilerContext = IncrementalJavaCompilerContext(
-                incrementalJavaCompilerCommand.src,
-                incrementalJavaCompilerCommand.directory,
-                incrementalJavaCompilerCommand.classpath
+                src = incrementalJavaCompilerCommand.src,
+                directory = incrementalJavaCompilerCommand.directory,
+                cacheDir = incrementalJavaCompilerCommand.cacheDir,
+                classpath = incrementalJavaCompilerCommand.classpath
             )
 
             val exitCode = incrementalJavaCompilerRunner.compile(incrementalJavaCompilerContext)
