@@ -66,7 +66,7 @@ class IncrementalJavaCompilerCommand private constructor() {
         get() = _debug
 
     companion object {
-        private const val DEFAULT_BUILD_DIR_NAME = "build"
+        private const val DEFAULT_BUILD_DIR_NAME = "incjavac"
         private const val DEFAULT_CACHE_DIR_NAME = "cache"
         private const val DEFAULT_DIRECTORY_DIR_NAME = "classes"
         private const val DEFAULT_METADATA_DIR_NAME = "metadata"
