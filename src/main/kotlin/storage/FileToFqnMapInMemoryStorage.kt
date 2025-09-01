@@ -15,7 +15,7 @@ class FileToFqnMapInMemoryStorage private constructor(
         dataStorage.load()?.mapValues { (_, set) -> set.toMutableSet() }?.toMutableMap() ?: mutableMapOf()
     }
 
-    fun set(data: Map<File, Set<FqName>>) {
+    fun addAll(data: Map<File, Set<FqName>>) {
         for ((key, value) in data) {
             inMemoryData.computeIfAbsent(key) { mutableSetOf() }.addAll(value)
         }

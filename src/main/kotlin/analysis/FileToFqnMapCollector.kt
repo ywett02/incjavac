@@ -36,11 +36,11 @@ class FileToFqnMapCollector(
         }
 
         eventReporter.reportEvent(
-            """File to FQN map created: [
+            """File to FQN entry created: [
                 |${fileToFqnMap.joinToString({ it.absolutePath }, { it.id })}]""".trimMargin()
         )
 
-        fqnMapInMemoryStorage.set(fileToFqnMap)
+        fqnMapInMemoryStorage.addAll(fileToFqnMap)
         fileToFqnMap.clear()
     }
 }

@@ -15,6 +15,7 @@ class DependencyMapInMemoryStorage constructor(
     }
 
     fun set(data: Map<FqName, Set<FqName>>) {
+        inMemoryData.clear()
         for ((key, value) in data) {
             inMemoryData.computeIfAbsent(key) { mutableSetOf() }.addAll(value)
         }
