@@ -55,9 +55,7 @@ class IncrementalJavaCompilerRunner(
                 return exitCode
             }
 
-            staleOutputCleaner.cleanStaleOutput(fileChanges.removedFiles, incrementalJavaCompilerContext)
             dependencyMapCollector.collectDependencies(incrementalJavaCompilerContext)
-
             return exitCode
         } catch (e: Throwable) {
             eventReporter.reportEvent("Compilation failed due to internal error: ${e.message}")
@@ -83,6 +81,7 @@ class IncrementalJavaCompilerRunner(
                 return CompilationResult.Success(OK)
             }
 
+            staleOutputCleaner.cleanStaleOutput(fileChanges.removedFiles, incrementalJavaCompilerContext)
             return CompilationResult.Success(runCompilation(dirtyFiles, incrementalJavaCompilerContext))
         } catch (e: Throwable) {
             eventReporter.reportEvent(

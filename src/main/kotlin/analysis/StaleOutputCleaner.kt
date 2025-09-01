@@ -13,8 +13,11 @@ class StaleOutputCleaner(
 ) {
 
     fun cleanStaleOutput(removedFiles: List<File>, incrementalJavaCompilerContext: IncrementalJavaCompilerContext) {
-        val classesToRemove = getClassesToRemove(removedFiles, incrementalJavaCompilerContext)
+        if (removedFiles.isEmpty()) {
+            return
+        }
 
+        val classesToRemove = getClassesToRemove(removedFiles, incrementalJavaCompilerContext)
         deleteClasses(classesToRemove.values)
         deleteDependencies(classesToRemove.keys)
         deleteFileToFqnEdge(removedFiles)
