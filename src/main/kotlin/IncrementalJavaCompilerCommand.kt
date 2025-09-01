@@ -83,8 +83,6 @@ class IncrementalJavaCompilerCommand private constructor() {
             val javaCompiler = ToolProvider.getSystemJavaCompiler()
             val incrementalJavaCompilerRunner =
                 IncrementalJavaCompilerRunner(
-                    javaCompiler,
-                    javaCompiler.getStandardFileManager(null, null, null),
                     FileChangesCalculator(fileDigestInMemoryStorage),
                     DirtyFilesCalculator(fileToFqnMapInMemoryStorage, dependencyMapInMemoryStorage),
                     DependencyMapCollector(dependencyMapInMemoryStorage, eventReporter),
@@ -97,7 +95,8 @@ class IncrementalJavaCompilerCommand private constructor() {
                 src = incrementalJavaCompilerCommand.src,
                 directory = incrementalJavaCompilerCommand.directory,
                 cacheDir = incrementalJavaCompilerCommand.cacheDir,
-                classpath = incrementalJavaCompilerCommand.classpath
+                classpath = incrementalJavaCompilerCommand.classpath,
+                javaCompiler = ToolProvider.getSystemJavaCompiler()
             )
 
             val exitCode = incrementalJavaCompilerRunner.compile(incrementalJavaCompilerContext)

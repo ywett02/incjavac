@@ -8,14 +8,10 @@ import com.example.assignment.entity.ExitCode.OK
 import com.example.assignment.entity.FileChanges
 import com.sun.source.util.JavacTask
 import java.io.File
-import javax.tools.JavaCompiler
 import javax.tools.JavaFileObject
-import javax.tools.StandardJavaFileManager
 import javax.tools.StandardLocation
 
 class IncrementalJavaCompilerRunner(
-    private val javac: JavaCompiler,
-    private val fileManager: StandardJavaFileManager,
     private val fileChangesCalculator: FileChangesCalculator,
     private val dirtyFilesCalculator: DirtyFilesCalculator,
     private val dependencyMapCollector: DependencyMapCollector,
@@ -61,8 +57,8 @@ class IncrementalJavaCompilerRunner(
                 return exitCode
             }
 
-            staleOutputCleaner.cleanStaleOutput(fileChanges.removedFiles, fileManager)
-            dependencyMapCollector.collectDependencies(incrementalJavaCompilerContext.directory)
+            //      staleOutputCleaner.cleanStaleOutput(fileChanges.removedFiles, fileManager)
+            dependencyMapCollector.collectDependencies(incrementalJavaCompilerContext)
 
             return exitCode
         } catch (e: Throwable) {
@@ -103,12 +99,13 @@ class IncrementalJavaCompilerRunner(
         filesToCompile: Set<File>,
         incrementalJavaCompilerContext: IncrementalJavaCompilerContext
     ): ExitCode {
-        val compilationUnits = fileManager.getJavaFileObjectsFromFiles(filesToCompile)
+        val compilationUnits =
+            incrementalJavaCompilerContext.javaFileManager.getJavaFileObjectsFromFiles(filesToCompile)
         val compilationOptions = createCompilationOptions(incrementalJavaCompilerContext)
 
-        val javacTask = javac.getTask(
+        val javacTask = incrementalJavaCompilerContext.javaCompiler.getTask(
             null,
-            fileManager,
+            incrementalJavaCompilerContext.javaFileManager,
             null,
             compilationOptions,
             null,
@@ -134,7 +131,12 @@ class IncrementalJavaCompilerRunner(
 
 
     private fun createCompilationOptions(incrementalJavaCompilerContext: IncrementalJavaCompilerContext): Iterable<String> {
-        val classFiles = fileManager.list(StandardLocation.CLASS_OUTPUT, "", setOf(JavaFileObject.Kind.CLASS), true)
+        val classFiles = incrementalJavaCompilerContext.javaFileManager.list(
+            StandardLocation.CLASS_OUTPUT,
+            "",
+            setOf(JavaFileObject.Kind.CLASS),
+            true
+        )
             .map { javaFileObject ->
                 File(javaFileObject.toUri())
             }.joinToString(separator = File.pathSeparator, transform = { file -> file.absolutePath })
