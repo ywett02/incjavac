@@ -22,7 +22,7 @@ class DependencyMapInMemoryStorage constructor(
     }
 
     fun get(): Map<FqName, Set<FqName>> {
-        return inMemoryData
+        return inMemoryData.toMap()
     }
 
     override fun close() {

@@ -20,7 +20,7 @@ class ClasspathDigestInMemoryStorage private constructor(
     }
 
     fun get(): Map<File, String> {
-        return inMemoryData
+        return inMemoryData.toMap()
     }
 
     override fun close() {

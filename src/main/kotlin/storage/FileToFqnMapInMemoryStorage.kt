@@ -22,7 +22,7 @@ class FileToFqnMapInMemoryStorage private constructor(
     }
 
     fun get(): Map<File, Set<FqName>> {
-        return inMemoryData
+        return inMemoryData.toMap()
     }
 
     fun remove(key: File) {

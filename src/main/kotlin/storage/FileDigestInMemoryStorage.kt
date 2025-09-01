@@ -20,7 +20,7 @@ class FileDigestInMemoryStorage private constructor(
     }
 
     fun get(): Map<File, String> {
-        return inMemoryData
+        return inMemoryData.toMap()
     }
 
     fun remove(key: File) {
