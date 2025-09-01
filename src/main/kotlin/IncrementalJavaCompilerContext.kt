@@ -2,7 +2,7 @@ package com.example.assignment
 
 import java.io.File
 import javax.tools.JavaCompiler
-import javax.tools.JavaFileObject
+import javax.tools.StandardJavaFileManager
 import javax.tools.StandardLocation
 
 data class IncrementalJavaCompilerContext(
@@ -20,12 +20,9 @@ data class IncrementalJavaCompilerContext(
 
     val sourceFiles = findJavaFiles(src)
 
-    val javaFileManager = javaCompiler.getStandardFileManager(null, null, null).apply {
+    val javaFileManager: StandardJavaFileManager = javaCompiler.getStandardFileManager(null, null, null).apply {
         setLocation(StandardLocation.CLASS_OUTPUT, setOf(directory))
     }
-
-    val classObjects
-        get() = javaFileManager.list(StandardLocation.CLASS_OUTPUT, "", setOf(JavaFileObject.Kind.CLASS), true)
 
     private fun findJavaFiles(src: File): Set<File> {
         if (src.isDirectory.not()) {
