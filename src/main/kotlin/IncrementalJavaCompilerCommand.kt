@@ -115,7 +115,9 @@ class IncrementalJavaCompilerCommand private constructor() {
                 incrementalJavaCompilerContext.outputDir.copyRecursively(incrementalJavaCompilerCommand.directory)
             } else {
                 incrementalJavaCompilerContext.outputDir.deleteRecursively()
-                incrementalJavaCompilerCommand.directory.copyRecursively(incrementalJavaCompilerContext.outputDir)
+                if (incrementalJavaCompilerCommand.directory.exists()) {
+                    incrementalJavaCompilerCommand.directory.copyRecursively(incrementalJavaCompilerContext.outputDir)
+                }
             }
 
             return exitCode
