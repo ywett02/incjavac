@@ -20,7 +20,7 @@ class DirtyFilesCalculator(
         return sourceFiles
             .asSequence()
             .flatMap { sourceFile: File ->
-                fileToFqnMap.getOrDefault(sourceFile.absolutePath, emptySet())
+                fileToFqnMap.getOrDefault(sourceFile, emptySet())
             }
             .flatMap { classFqnName ->
                 invertedDependencyMap.getOrDefault(classFqnName, emptySet())
