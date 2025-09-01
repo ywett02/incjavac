@@ -129,12 +129,24 @@ class IncrementalJavaCompilerCommand private constructor() {
 
             try {
                 parser.parseArgument(*args)
+                validateArguments(incrementalJavaCompilerCommand)
                 return incrementalJavaCompilerCommand
-            } catch (cmdException: CmdLineException) {
-                System.err.println(cmdException.message)
+            } catch (exception: Throwable) {
+                System.err.println(exception.message)
                 parser.printUsage(System.err)
 
-                throw cmdException
+                throw CmdLineException(parser, exception)
+            }
+        }
+
+        private fun validateArguments(incrementalJavaCompilerCommand: IncrementalJavaCompilerCommand) {
+            incrementalJavaCompilerCommand.apply {
+                require(src.exists()) {
+                    "${src.name} does not exist"
+                }
+                require(src.isDirectory) {
+                    "${src.name} is not a directory"
+                }
             }
         }
     }
