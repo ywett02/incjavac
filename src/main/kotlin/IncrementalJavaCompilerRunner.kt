@@ -6,8 +6,6 @@ import com.example.assignment.entity.ExitCode
 import com.example.assignment.entity.ExitCode.COMPILATION_ERROR
 import com.example.assignment.entity.ExitCode.OK
 import com.example.assignment.entity.FileChanges
-import com.example.assignment.storage.FileToFqnMapInMemoryStorage
-import com.example.assignment.util.joinToString
 import com.sun.source.util.JavacTask
 import java.io.File
 import javax.tools.JavaCompiler
@@ -21,8 +19,8 @@ class IncrementalJavaCompilerRunner(
     private val fileChangesCalculator: FileChangesCalculator,
     private val dirtyFilesCalculator: DirtyFilesCalculator,
     private val dependencyMapCollector: DependencyMapCollector,
+    private val fileToFqnMapCollectorFactory: FileToFqnMapCollectorFactory,
     private val staleOutputCleaner: StaleOutputCleaner,
-    private val fileToFqnMapInMemoryStorage: FileToFqnMapInMemoryStorage,
     private val eventReporter: EventReporter
 ) {
 
@@ -110,8 +108,7 @@ class IncrementalJavaCompilerRunner(
             compilationUnits
         ) as JavacTask
 
-        val fileToFqnMapCollector = FileToFqnMapCollector(javacTask.elements)
-        javacTask.addTaskListener(fileToFqnMapCollector)
+        javacTask.addTaskListener(fileToFqnMapCollectorFactory.create(javacTask.elements))
 
         eventReporter.reportEvent(
             "javac running with arguments: [${compilationOptions.joinToString(separator = " ")} ${
@@ -121,16 +118,7 @@ class IncrementalJavaCompilerRunner(
             }}]"
         )
 
-        val success = javacTask.call()
-
-        val fileToFqnMap = fileToFqnMapCollector.fileToFqnMap
-        eventReporter.reportEvent(
-            """File to FQN map created: [
-                |${fileToFqnMap.joinToString({ it.absolutePath }, { it.id })}]""".trimMargin()
-        )
-        fileToFqnMapInMemoryStorage.set(fileToFqnMap)
-
-        return if (success) {
+        return if (javacTask.call()) {
             OK
         } else {
             COMPILATION_ERROR

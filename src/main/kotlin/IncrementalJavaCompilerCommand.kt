@@ -1,9 +1,6 @@
 package com.example.assignment
 
-import com.example.assignment.analysis.DependencyMapCollector
-import com.example.assignment.analysis.DirtyFilesCalculator
-import com.example.assignment.analysis.FileChangesCalculator
-import com.example.assignment.analysis.StaleOutputCleaner
+import com.example.assignment.analysis.*
 import com.example.assignment.entity.ExitCode
 import com.example.assignment.storage.DependencyMapInMemoryStorage
 import com.example.assignment.storage.FileDigestInMemoryStorage
@@ -91,8 +88,8 @@ class IncrementalJavaCompilerCommand private constructor() {
                     FileChangesCalculator(fileDigestInMemoryStorage),
                     DirtyFilesCalculator(fileToFqnMapInMemoryStorage, dependencyMapInMemoryStorage),
                     DependencyMapCollector(dependencyMapInMemoryStorage, eventReporter),
+                    FileToFqnMapCollectorFactory(fileToFqnMapInMemoryStorage, eventReporter),
                     StaleOutputCleaner(fileToFqnMapInMemoryStorage, dependencyMapInMemoryStorage),
-                    fileToFqnMapInMemoryStorage,
                     eventReporter
                 )
 
