@@ -29,6 +29,7 @@ class DirtyFilesCalculator(
                 fqnToFileMap.getOrDefault(dependencyFqnName, emptySet())
             }
             .plus(changes.addedAndModifiedFiles)
+            .minus(changes.removedFiles)
             .toSet()
     }
 }
