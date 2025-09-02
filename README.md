@@ -19,10 +19,10 @@
 ./gradlew run --args="-src example/basic/src"
 
 # With dependencies
-./gradlew run --args="-src example/dependencies/src -cp example/dependencies/bin:example/dependencies/lib/time.jar:example/dependencies/lib/formatter.zip"
+./gradlew run --args="-src example/dependencies/src -cp example/dependencies/lib/classes:example/dependencies/lib/time.jar:example/dependencies/lib/formatter.zip"
 
 # Full example
-./gradlew run --args="-src example/dependencies/src -cp example/dependencies/bin:example/dependencies/lib/time.jar:example/dependencies/lib/formatter.zip -d example/dependencies/build/classes -cd example/dependencies/build/cache --debug"
+./gradlew run --args="-src example/dependencies/src -cp example/dependencies/lib/classes:example/dependencies/lib/time.jar:example/dependencies/lib/formatter.zip -d example/dependencies/build/classes -cd example/dependencies/build/cache --debug"
 ```
 
 ### Installation
