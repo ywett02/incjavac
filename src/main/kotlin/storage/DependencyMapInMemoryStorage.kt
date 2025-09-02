@@ -14,8 +14,7 @@ class DependencyMapInMemoryStorage constructor(
         dataStorage.load()?.mapValues { (_, set) -> set.toMutableSet() }?.toMutableMap() ?: mutableMapOf()
     }
 
-    fun set(data: Map<FqName, Set<FqName>>) {
-        inMemoryData.clear()
+    fun addAll(data: Map<FqName, Set<FqName>>) {
         for ((key, value) in data) {
             inMemoryData.computeIfAbsent(key) { mutableSetOf() }.addAll(value)
         }
@@ -23,6 +22,10 @@ class DependencyMapInMemoryStorage constructor(
 
     fun get(): Map<FqName, Set<FqName>> {
         return inMemoryData.toMap()
+    }
+
+    fun remove(key: FqName) {
+        inMemoryData.remove(key)
     }
 
     override fun close() {

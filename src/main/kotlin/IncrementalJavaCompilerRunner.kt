@@ -13,7 +13,7 @@ class IncrementalJavaCompilerRunner(
     private val fileChangesCalculator: FileChangesCalculator,
     private val classpathChangeCalculator: ClasspathChangeCalculator,
     private val dirtyFilesCalculator: DirtyFilesCalculator,
-    private val dependencyMapCollector: DependencyMapCollector,
+    private val dependencyMapCollectorFactory: DependencyMapCollectorFactory,
     private val fileToFqnMapCollectorFactory: FileToFqnMapCollectorFactory,
     private val staleOutputCleaner: StaleOutputCleaner,
     private val eventReporter: EventReporter
@@ -54,12 +54,6 @@ class IncrementalJavaCompilerRunner(
                         compilationResult.exitCode
                     }
                 }
-
-            if (exitCode != OK) {
-                return exitCode
-            }
-
-            dependencyMapCollector.collectDependencies(incrementalJavaCompilerContext)
 
             return exitCode
         } catch (e: Throwable) {
@@ -121,6 +115,12 @@ class IncrementalJavaCompilerRunner(
         ) as JavacTask
 
         javacTask.addTaskListener(fileToFqnMapCollectorFactory.create(javacTask.elements))
+        javacTask.addTaskListener(
+            dependencyMapCollectorFactory.create(
+                javacTask.elements,
+                incrementalJavaCompilerContext
+            )
+        )
 
         eventReporter.reportEvent(
             "javac running with arguments: [${compilationOptions.joinToString(separator = " ")} ${

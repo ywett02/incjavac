@@ -1,6 +1,8 @@
 package com.example.assignment.analysis
 
 import com.example.assignment.IncrementalJavaCompilerContext
+import com.example.assignment.entity.FqName
+import com.example.assignment.storage.DependencyMapInMemoryStorage
 import com.example.assignment.storage.FileToFqnMapInMemoryStorage
 import java.io.File
 import javax.tools.JavaFileObject
@@ -8,23 +10,31 @@ import javax.tools.StandardLocation
 
 class StaleOutputCleaner(
     private val fileToFqnMapInMemoryStorage: FileToFqnMapInMemoryStorage,
+    private val dependencyMapInMemoryStorage: DependencyMapInMemoryStorage
 ) {
 
     fun cleanStaleOutput(removedFiles: Set<File>, incrementalJavaCompilerContext: IncrementalJavaCompilerContext) {
-        deleteClassFiles(removedFiles, incrementalJavaCompilerContext)
+        val staleData = staleData(removedFiles, incrementalJavaCompilerContext)
+
+        deleteClassFiles(staleData.values.flatten(), incrementalJavaCompilerContext)
         deleteFileToFqnEdge(removedFiles)
+        deleteDependencyEdge(staleData.values.flatten())
     }
 
-    private fun deleteClassFiles(
+    private fun staleData(
         removedFiles: Set<File>,
         incrementalJavaCompilerContext: IncrementalJavaCompilerContext
-    ) {
+    ): Map<File, Set<FqName>> =
         fileToFqnMapInMemoryStorage.get()
             .filter { (file, _) ->
                 removedFiles.contains(file)
             }
-            .values
-            .flatten()
+
+    private fun deleteClassFiles(
+        fqnList: List<FqName>,
+        incrementalJavaCompilerContext: IncrementalJavaCompilerContext
+    ) {
+        fqnList
             .map { fqn ->
                 incrementalJavaCompilerContext.javaFileManager.getJavaFileForOutput(
                     StandardLocation.CLASS_OUTPUT,
@@ -43,5 +53,11 @@ class StaleOutputCleaner(
 
     private fun deleteFileToFqnEdge(removedFiles: Set<File>) {
         removedFiles.forEach { file -> fileToFqnMapInMemoryStorage.remove(file) }
+    }
+
+    private fun deleteDependencyEdge(fqnList: List<FqName>) {
+        fqnList.forEach { fqn ->
+            dependencyMapInMemoryStorage.remove(fqn)
+        }
     }
 }
