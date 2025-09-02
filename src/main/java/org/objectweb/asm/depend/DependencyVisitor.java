@@ -48,7 +48,8 @@ public class DependencyVisitor extends ClassVisitor {
 
     Map<FqName, Set<FqName>> groups = new HashMap<FqName, Set<FqName>>();
 
-    Set<FqName> current;
+    FqName currentKey;
+    Set<FqName> currentValue;
 
     public Map<FqName, Set<FqName>> getGlobals() {
         return groups;
@@ -68,7 +69,8 @@ public class DependencyVisitor extends ClassVisitor {
             final String signature,
             final String superName,
             final String[] interfaces) {
-        current = groups.computeIfAbsent(binaryName(name), k -> new HashSet<>());
+        currentKey = binaryName(name);
+        currentValue = groups.computeIfAbsent(currentKey, k -> new HashSet<>());
 
         if (signature == null) {
             if (superName != null) {
@@ -170,6 +172,42 @@ public class DependencyVisitor extends ClassVisitor {
         }
     }
 
+    private void addName(final String name) {
+        if (name == null) {
+            return;
+        }
+
+        FqName binaryName = binaryName(name);
+        if (currentKey.getId().equals(binaryName.getId())) {
+            return;
+        }
+
+        currentValue.add(binaryName);
+    }
+
+    class SignatureDependencyVisitor extends SignatureVisitor {
+
+        String signatureClassName;
+
+        public SignatureDependencyVisitor() {
+            super(Opcodes.ASM9);
+        }
+
+        @Override
+        public void visitClassType(final String name) {
+            signatureClassName = name;
+            addInternalName(name);
+        }
+
+        @Override
+        public void visitInnerClassType(final String name) {
+            signatureClassName = signatureClassName + "$" + name;
+            addInternalName(signatureClassName);
+        }
+    }
+
+    // ---------------------------------------------
+
     class MethodDependencyVisitor extends MethodVisitor {
 
         public MethodDependencyVisitor() {
@@ -218,7 +256,8 @@ public class DependencyVisitor extends ClassVisitor {
                 final int opcode,
                 final String owner,
                 final String name,
-                final String desc) {
+                final String desc,
+                final boolean isInterface) {
             addInternalName(owner);
             addMethodDesc(desc);
         }
@@ -267,37 +306,6 @@ public class DependencyVisitor extends ClassVisitor {
                 addInternalName(type);
             }
         }
-    }
-
-    class SignatureDependencyVisitor extends SignatureVisitor {
-
-        String signatureClassName;
-
-        public SignatureDependencyVisitor() {
-            super(Opcodes.ASM9);
-        }
-
-        @Override
-        public void visitClassType(final String name) {
-            signatureClassName = name;
-            addInternalName(name);
-        }
-
-        @Override
-        public void visitInnerClassType(final String name) {
-            signatureClassName = signatureClassName + "$" + name;
-            addInternalName(signatureClassName);
-        }
-    }
-
-    // ---------------------------------------------
-
-    private void addName(final String name) {
-        if (name == null) {
-            return;
-        }
-
-        current.add(binaryName(name));
     }
 
     private FqName binaryName(String name) {
