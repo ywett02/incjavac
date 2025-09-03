@@ -1,5 +1,35 @@
 # incjavac - Incremental Java Compiler CLI
 
+`incjavac` is a command-line tool that demonstrates **incremental compilation in Java**. Instead of recompiling an
+entire codebase, it recompiles only the files that changed and their dependencies, making iterative builds faster. This
+is an **educational proof of concept**, not a production-ready compiler.
+
+## Main Features
+
+- **Incremental compilation**: recompiles only changed files and their dependencies
+- **Dependency tracking**: analyzes and tracks class dependencies using ASM bytecode analysis
+- **Caching**: stores compilation metadata for subsequent compilations (in JSON format for readability)
+- **Stale data removal**: automatically cleans up outputs when their sources are removed
+
+## How It Works
+
+- **First run**
+    - Compiles all Java files in the source directory
+    - Builds dependency maps and stores compilation metadata
+- **Subsequent Runs**
+    - Detects changed files using file digests (MD5 hashes)
+    - Builds a "dirty set" including changed files and their dependencies
+    - Recompiles only the dirty set, leaving unchanged files untouched
+    - Updates dependency maps and metadata for next compilation
+
+## Current Limitations
+
+- **No incremental support for library (classpath) changes** - any modification to the classpath results in a full
+  recompilation
+- **No distinction between ABI and non-ABI changes** - both types of source changes currently trigger recompilation
+- **Java constants not tracked** – class dependencies are not propagated when constants are used, which can cause missed
+  relationships
+
 ## Usage
 
 ### Command Line Arguments
