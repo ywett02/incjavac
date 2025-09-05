@@ -6,7 +6,7 @@ import com.example.assignment.util.mapOfSetsSerializer
 import java.io.Closeable
 import java.io.File
 
-class DependencyMapInMemoryStorage constructor(
+class DependencyMapInMemoryStorage private constructor(
     private val dataStorage: DataStorage<Map<FqName, Set<FqName>>>
 ) : Closeable {
 

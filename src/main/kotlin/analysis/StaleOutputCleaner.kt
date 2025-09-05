@@ -1,6 +1,7 @@
 package com.example.assignment.analysis
 
 import com.example.assignment.IncrementalJavaCompilerContext
+import com.example.assignment.entity.FileChanges
 import com.example.assignment.entity.FqName
 import com.example.assignment.storage.DependencyMapInMemoryStorage
 import com.example.assignment.storage.FileToFqnMapInMemoryStorage
@@ -13,21 +14,20 @@ class StaleOutputCleaner(
     private val dependencyMapInMemoryStorage: DependencyMapInMemoryStorage
 ) {
 
-    fun cleanStaleOutput(removedFiles: Set<File>, incrementalJavaCompilerContext: IncrementalJavaCompilerContext) {
-        val staleData = staleData(removedFiles, incrementalJavaCompilerContext)
+    fun cleanStaleOutput(fileChanges: FileChanges, incrementalJavaCompilerContext: IncrementalJavaCompilerContext) {
+        val staleData = staleData(fileChanges)
 
         deleteClassFiles(staleData.values.flatten(), incrementalJavaCompilerContext)
-        deleteFileToFqnEdge(removedFiles)
+        deleteFileToFqnEdge(fileChanges)
         deleteDependencyEdge(staleData.values.flatten())
     }
 
     private fun staleData(
-        removedFiles: Set<File>,
-        incrementalJavaCompilerContext: IncrementalJavaCompilerContext
+        fileChanges: FileChanges
     ): Map<File, Set<FqName>> =
         fileToFqnMapInMemoryStorage.get()
             .filter { (file, _) ->
-                removedFiles.contains(file)
+                fileChanges.addedAndModifiedFiles.contains(file) || fileChanges.removedFiles.contains(file)
             }
 
     private fun deleteClassFiles(
@@ -51,8 +51,9 @@ class StaleOutputCleaner(
             }
     }
 
-    private fun deleteFileToFqnEdge(removedFiles: Set<File>) {
-        removedFiles.forEach { file -> fileToFqnMapInMemoryStorage.remove(file) }
+    private fun deleteFileToFqnEdge(fileChanges: FileChanges) {
+        fileChanges.addedAndModifiedFiles.forEach { file -> fileToFqnMapInMemoryStorage.remove(file) }
+        fileChanges.removedFiles.forEach { file -> fileToFqnMapInMemoryStorage.remove(file) }
     }
 
     private fun deleteDependencyEdge(fqnList: List<FqName>) {

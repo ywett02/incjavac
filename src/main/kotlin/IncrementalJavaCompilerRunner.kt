@@ -81,7 +81,7 @@ class IncrementalJavaCompilerRunner(
                 "Dirty files: [${dirtyFiles.joinToString()}]"
             )
 
-            staleOutputCleaner.cleanStaleOutput(fileChanges.removedFiles, incrementalJavaCompilerContext)
+            staleOutputCleaner.cleanStaleOutput(fileChanges, incrementalJavaCompilerContext)
 
             if (dirtyFiles.isEmpty()) {
                 return CompilationResult.Success(OK)
