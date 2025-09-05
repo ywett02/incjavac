@@ -1,6 +1,7 @@
 package com.example.assignment
 
 import com.example.assignment.analysis.*
+import com.example.assignment.analysis.constant.ConstantDependencyMapCollectorFactory
 import com.example.assignment.entity.ExitCode
 import com.example.assignment.storage.ClasspathDigestInMemoryStorage
 import com.example.assignment.storage.DependencyMapInMemoryStorage
@@ -99,7 +100,10 @@ class IncrementalJavaCompilerCommand private constructor() {
                     DirtyFilesCalculator(fileToFqnMapInMemoryStorage, dependencyMapInMemoryStorage),
                     DependencyMapCollectorFactory(dependencyMapInMemoryStorage),
                     FileToFqnMapCollectorFactory(fileToFqnMapInMemoryStorage),
-                    StaleOutputCleaner(fileToFqnMapInMemoryStorage, dependencyMapInMemoryStorage),
+                    ConstantDependencyMapCollectorFactory(dependencyMapInMemoryStorage),
+                    StaleOutputCleaner(
+                        fileToFqnMapInMemoryStorage, dependencyMapInMemoryStorage
+                    ),
                     eventReporter
                 )
 
