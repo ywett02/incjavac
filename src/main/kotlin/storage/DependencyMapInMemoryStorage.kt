@@ -6,17 +6,17 @@ import com.example.assignment.util.mapOfSetsSerializer
 import java.io.Closeable
 import java.io.File
 
-class DependencyMapInMemoryStorage constructor(
+class DependencyMapInMemoryStorage private constructor(
     private val dataStorage: DataStorage<Map<FqName, Set<FqName>>>
 ) : Closeable {
 
-    private val inMemoryData: MutableMap<FqName, MutableSet<FqName>> by lazy {
-        dataStorage.load()?.mapValues { (_, set) -> set.toMutableSet() }?.toMutableMap() ?: mutableMapOf()
+    private val inMemoryData: MutableMap<FqName, Set<FqName>> by lazy {
+        dataStorage.load()?.toMutableMap() ?: mutableMapOf()
     }
 
     fun addAll(data: Map<FqName, Set<FqName>>) {
         for ((key, value) in data) {
-            inMemoryData.computeIfAbsent(key) { mutableSetOf() }.addAll(value)
+            inMemoryData[key] = value
         }
     }
 
