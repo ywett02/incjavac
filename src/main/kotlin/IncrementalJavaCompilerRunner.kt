@@ -1,6 +1,7 @@
 package com.example.assignment
 
 import com.example.assignment.analysis.*
+import com.example.assignment.analysis.constant.ConstantDependencyMapCollectorFactory
 import com.example.assignment.entity.CompilationResult
 import com.example.assignment.entity.ExitCode
 import com.example.assignment.entity.ExitCode.COMPILATION_ERROR
@@ -15,6 +16,7 @@ class IncrementalJavaCompilerRunner(
     private val dirtyFilesCalculator: DirtyFilesCalculator,
     private val dependencyMapCollectorFactory: DependencyMapCollectorFactory,
     private val fileToFqnMapCollectorFactory: FileToFqnMapCollectorFactory,
+    private val constantDependencyMapCollectorFactory: ConstantDependencyMapCollectorFactory,
     private val staleOutputCleaner: StaleOutputCleaner,
     private val eventReporter: EventReporter
 ) {
@@ -121,6 +123,7 @@ class IncrementalJavaCompilerRunner(
                 incrementalJavaCompilerContext
             )
         )
+        javacTask.addTaskListener(constantDependencyMapCollectorFactory.create(javacTask))
 
         eventReporter.reportEvent(
             "javac running with arguments: [${compilationOptions.joinToString(separator = " ")} ${
