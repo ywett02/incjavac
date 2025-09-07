@@ -92,7 +92,6 @@ class IncrementalJavaCompilerCommand private constructor() {
             val incrementalJavaCompilerContext = IncrementalJavaCompilerContext(
                 src = incrementalJavaCompilerCommand.src,
                 outputDir = incrementalJavaCompilerCommand.cacheDir.resolve(DEFAULT_DIRECTORY_DIR_NAME),
-                metadataDir = incrementalJavaCompilerCommand.cacheDir.resolve(DEFAULT_METADATA_DIR_NAME),
                 classpath = incrementalJavaCompilerCommand.classpath,
                 javaCompiler = ToolProvider.getSystemJavaCompiler(),
                 onCompilationCompleted = { exitCode ->

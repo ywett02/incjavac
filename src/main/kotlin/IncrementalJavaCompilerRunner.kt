@@ -72,8 +72,8 @@ class IncrementalJavaCompilerRunner(
         incrementalJavaCompilerContext: IncrementalJavaCompilerContext
     ): CompilationResult {
         try {
-            if (!incrementalJavaCompilerContext.metadataDir.exists()) {
-                return CompilationResult.RequiresRecompilation("Required metadata doest not exist")
+            if (!incrementalJavaCompilerContext.outputDir.exists()) {
+                return CompilationResult.RequiresRecompilation("Previous output doest not exist")
             }
 
             if (hasClasspathChanged) {
