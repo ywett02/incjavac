@@ -7,6 +7,7 @@ import com.example.assignment.entity.ExitCode
 import com.example.assignment.entity.ExitCode.COMPILATION_ERROR
 import com.example.assignment.entity.ExitCode.OK
 import com.example.assignment.entity.FileChanges
+import com.example.assignment.reporter.EventReporter
 import com.sun.source.util.JavacTask
 import java.io.File
 
