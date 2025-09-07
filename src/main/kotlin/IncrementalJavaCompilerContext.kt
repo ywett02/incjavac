@@ -1,5 +1,6 @@
 package com.example.assignment
 
+import com.example.assignment.entity.ExitCode
 import java.io.File
 import javax.tools.JavaCompiler
 import javax.tools.StandardJavaFileManager
@@ -10,7 +11,8 @@ data class IncrementalJavaCompilerContext(
     val outputDir: File,
     val metadataDir: File,
     val classpath: String?,
-    val javaCompiler: JavaCompiler
+    val javaCompiler: JavaCompiler,
+    val onCompilationCompleted: (ExitCode) -> Unit,
 ) {
 
     init {

@@ -31,7 +31,10 @@ class DependencyMapCollector(
         )
 
         collectDependencies(javaFileObject)
-        dependencyMapInMemoryStorage.addAll(visitor.globals)
+
+        for ((fqName, dependencies) in visitor.globals) {
+            dependencyMapInMemoryStorage.append(fqName, dependencies)
+        }
     }
 
     private fun collectDependencies(javaFileObject: JavaFileObject) {

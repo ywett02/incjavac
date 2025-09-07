@@ -12,8 +12,8 @@ import com.sun.source.util.JavacTask
 import java.io.File
 
 class IncrementalJavaCompilerRunner(
-    private val fileChangesCalculator: FileChangesCalculator,
-    private val classpathChangeCalculator: ClasspathChangeCalculator,
+    private val fileChangesTracker: FileChangesTracker,
+    private val classpathChangesTracker: ClasspathChangesTracker,
     private val dirtyFilesCalculator: DirtyFilesCalculator,
     private val dependencyMapCollectorFactory: DependencyMapCollectorFactory,
     private val fileToFqnMapCollectorFactory: FileToFqnMapCollectorFactory,
@@ -24,14 +24,14 @@ class IncrementalJavaCompilerRunner(
 
     fun compile(incrementalJavaCompilerContext: IncrementalJavaCompilerContext): ExitCode {
         try {
-            val fileChanges = fileChangesCalculator.calculateFileChanges(incrementalJavaCompilerContext.sourceFiles)
+            val fileChanges = fileChangesTracker.trackFileChanges(incrementalJavaCompilerContext.sourceFiles)
             eventReporter.reportEvent(
                 """Added or modified files: [${fileChanges.addedAndModifiedFiles.joinToString()}]
                 |Removed files: [${fileChanges.removedFiles.joinToString()}]
             """.trimMargin()
             )
             val hasClasspathChanged =
-                classpathChangeCalculator.hasClasspathChanged(incrementalJavaCompilerContext.classpath)
+                classpathChangesTracker.hasClasspathChanged(incrementalJavaCompilerContext.classpath)
 
             val exitCode =
                 when (val compilationResult =
@@ -58,6 +58,7 @@ class IncrementalJavaCompilerRunner(
                     }
                 }
 
+            incrementalJavaCompilerContext.onCompilationCompleted(exitCode)
             return exitCode
         } catch (e: Throwable) {
             eventReporter.reportEvent("Compilation failed due to internal error: ${e.message}")

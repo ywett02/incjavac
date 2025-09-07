@@ -32,7 +32,8 @@ class FileToFqnMapCollector(
             return
         }
 
-        fqnMapInMemoryStorage.addAll(fileToFqnMap)
-        fileToFqnMap.clear()
+        for ((file, fqNames) in fileToFqnMap) {
+            fqnMapInMemoryStorage.append(file, fqNames)
+        }
     }
 }

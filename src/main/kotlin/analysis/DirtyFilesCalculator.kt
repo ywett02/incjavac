@@ -12,8 +12,8 @@ class DirtyFilesCalculator(
     private val dependencyMapInMemoryStorage: DependencyMapInMemoryStorage
 ) {
     fun calculateDirtyFiles(changes: FileChanges): Set<File> {
-        val fileToFqnMap: Map<File, Set<FqName>> = fileToFqnMapInMemoryStorage.get()
-        val invertedDependencyMap: Map<FqName, Set<FqName>> = dependencyMapInMemoryStorage.get().inverted()
+        val fileToFqnMap: Map<File, Set<FqName>> = fileToFqnMapInMemoryStorage.getAll()
+        val invertedDependencyMap: Map<FqName, Set<FqName>> = dependencyMapInMemoryStorage.getAll().inverted()
         val fqnToFileMap: Map<FqName, Set<File>> = fileToFqnMap.inverted()
 
         val sourceFiles = changes.addedAndModifiedFiles + changes.removedFiles

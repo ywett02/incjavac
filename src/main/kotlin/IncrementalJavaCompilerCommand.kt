@@ -67,6 +67,9 @@ class IncrementalJavaCompilerCommand private constructor() {
     val debug: Boolean
         get() = _debug
 
+    private val metadataDir: File
+        get() = cacheDir.resolve(DEFAULT_METADATA_DIR_NAME)
+
     companion object {
         private const val DEFAULT_BUILD_DIR_NAME = "build"
         private const val DEFAULT_CACHE_DIR_NAME = "cache"
@@ -78,26 +81,34 @@ class IncrementalJavaCompilerCommand private constructor() {
             val eventReporter = EventReporter(incrementalJavaCompilerCommand.debug)
             eventReporter.reportEvent("incJavac running with arguments: [${args.joinToString(separator = " ")}]")
 
+            val fileDigestInMemoryStorage = FileDigestInMemoryStorage.create(incrementalJavaCompilerCommand.metadataDir)
+            val classpathDigestInMemoryStorage =
+                ClasspathDigestInMemoryStorage.create(incrementalJavaCompilerCommand.metadataDir)
+            val fileToFqnMapInMemoryStorage =
+                FileToFqnMapInMemoryStorage.create(incrementalJavaCompilerCommand.metadataDir)
+            val dependencyMapInMemoryStorage =
+                DependencyMapInMemoryStorage.create(incrementalJavaCompilerCommand.metadataDir)
+
             val incrementalJavaCompilerContext = IncrementalJavaCompilerContext(
                 src = incrementalJavaCompilerCommand.src,
                 outputDir = incrementalJavaCompilerCommand.cacheDir.resolve(DEFAULT_DIRECTORY_DIR_NAME),
                 metadataDir = incrementalJavaCompilerCommand.cacheDir.resolve(DEFAULT_METADATA_DIR_NAME),
                 classpath = incrementalJavaCompilerCommand.classpath,
-                javaCompiler = ToolProvider.getSystemJavaCompiler()
+                javaCompiler = ToolProvider.getSystemJavaCompiler(),
+                onCompilationCompleted = { exitCode ->
+                    if (exitCode == ExitCode.OK) {
+                        fileDigestInMemoryStorage.close()
+                        classpathDigestInMemoryStorage.close()
+                        fileToFqnMapInMemoryStorage.close()
+                        dependencyMapInMemoryStorage.close()
+                    }
+                }
             )
-
-            val fileDigestInMemoryStorage = FileDigestInMemoryStorage.create(incrementalJavaCompilerContext.metadataDir)
-            val classpathDigestInMemoryStorage =
-                ClasspathDigestInMemoryStorage.create(incrementalJavaCompilerContext.metadataDir)
-            val fileToFqnMapInMemoryStorage =
-                FileToFqnMapInMemoryStorage.create(incrementalJavaCompilerContext.metadataDir)
-            val dependencyMapInMemoryStorage =
-                DependencyMapInMemoryStorage.create(incrementalJavaCompilerContext.metadataDir)
 
             val incrementalJavaCompilerRunner =
                 IncrementalJavaCompilerRunner(
-                    FileChangesCalculator(fileDigestInMemoryStorage),
-                    ClasspathChangeCalculator(classpathDigestInMemoryStorage),
+                    FileChangesTracker(fileDigestInMemoryStorage),
+                    ClasspathChangesTracker(classpathDigestInMemoryStorage),
                     DirtyFilesCalculator(fileToFqnMapInMemoryStorage, dependencyMapInMemoryStorage),
                     DependencyMapCollectorFactory(dependencyMapInMemoryStorage),
                     FileToFqnMapCollectorFactory(fileToFqnMapInMemoryStorage),
@@ -111,11 +122,6 @@ class IncrementalJavaCompilerCommand private constructor() {
             val exitCode = incrementalJavaCompilerRunner.compile(incrementalJavaCompilerContext)
 
             if (exitCode == ExitCode.OK) {
-                fileDigestInMemoryStorage.close()
-                classpathDigestInMemoryStorage.close()
-                fileToFqnMapInMemoryStorage.close()
-                dependencyMapInMemoryStorage.close()
-
                 incrementalJavaCompilerCommand.directory.deleteRecursively()
                 incrementalJavaCompilerContext.outputDir.copyRecursively(incrementalJavaCompilerCommand.directory)
             } else {

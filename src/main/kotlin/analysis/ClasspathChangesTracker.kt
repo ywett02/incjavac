@@ -4,7 +4,7 @@ import com.example.assignment.storage.ClasspathDigestInMemoryStorage
 import com.example.assignment.util.md5
 import java.io.File
 
-class ClasspathChangeCalculator(
+class ClasspathChangesTracker(
     private val classpathDigestInMemoryStorage: ClasspathDigestInMemoryStorage
 ) {
 
@@ -29,9 +29,11 @@ class ClasspathChangeCalculator(
             }.map { file ->
                 file.absoluteFile
             }.associateWith { item -> item.md5 }
-        val previousMetadata = classpathDigestInMemoryStorage.get()
+        val previousMetadata = classpathDigestInMemoryStorage.getAll()
 
-        classpathDigestInMemoryStorage.set(currentMetadata)
+        classpathDigestInMemoryStorage.removeAll()
+        classpathDigestInMemoryStorage.putAll(currentMetadata)
+
         return currentMetadata != previousMetadata
     }
 

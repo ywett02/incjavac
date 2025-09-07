@@ -25,7 +25,7 @@ class StaleOutputCleaner(
     private fun staleData(
         fileChanges: FileChanges
     ): Map<File, Set<FqName>> =
-        fileToFqnMapInMemoryStorage.get()
+        fileToFqnMapInMemoryStorage.getAll()
             .filter { (file, _) ->
                 fileChanges.addedAndModifiedFiles.contains(file) || fileChanges.removedFiles.contains(file)
             }

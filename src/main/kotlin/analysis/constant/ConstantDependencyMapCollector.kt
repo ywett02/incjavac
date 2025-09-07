@@ -19,6 +19,8 @@ class ConstantDependencyMapCollector(
         val treePath = TreePath(e.compilationUnit)
         val context = scanner.scan(treePath, null)
 
-        dependencyMapInMemoryStorage.addAll(context.dependencyMap)
+        for ((fqName, dependencies) in context.dependencyMap) {
+            dependencyMapInMemoryStorage.append(fqName, dependencies)
+        }
     }
 }

@@ -5,41 +5,41 @@ import com.example.assignment.storage.FileDigestInMemoryStorage
 import com.example.assignment.util.md5
 import java.io.File
 
-class FileChangesCalculator(
+class FileChangesTracker(
     private val fileDigestInMemoryStorage: FileDigestInMemoryStorage
 ) {
 
-    fun calculateFileChanges(sourceFiles: Set<File>): FileChanges {
+    fun trackFileChanges(sourceFiles: Set<File>): FileChanges {
         val currentMetadata = sourceFiles.associate { file -> file.absoluteFile to file.md5 }
-        val previousMetadata = fileDigestInMemoryStorage.get()
+        val previousMetadata = fileDigestInMemoryStorage.getAll()
 
         val fileChanges = FileChanges(
-            calculateAddedAndModifiedFiles(currentMetadata, previousMetadata),
-            calculateRemovedFiles(currentMetadata, previousMetadata)
+            getAndUpdateAddedAndModifiedFiles(currentMetadata, previousMetadata),
+            getAndUpdateRemovedFiles(currentMetadata, previousMetadata)
         )
-
-        fileDigestInMemoryStorage.set(currentMetadata)
 
         return fileChanges
     }
 
-    private fun calculateAddedAndModifiedFiles(
+    private fun getAndUpdateAddedAndModifiedFiles(
         currentMetadata: Map<File, String>,
         previousMetadata: Map<File, String>
     ): Set<File> = buildSet {
         for ((file, digest) in currentMetadata) {
             if (previousMetadata[file] != digest) {
+                fileDigestInMemoryStorage.put(file, digest)
                 add(file)
             }
         }
     }
 
-    private fun calculateRemovedFiles(
+    private fun getAndUpdateRemovedFiles(
         currentMetadata: Map<File, String>,
         previousMetadata: Map<File, String>
     ): Set<File> = buildSet {
         for ((file, _) in previousMetadata) {
             if (!currentMetadata.containsKey(file)) {
+                fileDigestInMemoryStorage.remove(file)
                 add(file)
             }
         }
