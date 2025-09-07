@@ -12,7 +12,9 @@ data class IncrementalJavaCompilerContext(
     val javaCompiler: JavaCompiler,
     val onCompilationCompleted: (ExitCode) -> Unit = {},
 ) {
-    val sourceFiles = findJavaFiles(src)
+    val sourceFiles by lazy {
+        findJavaFiles(src)
+    }
 
     val javaFileManager: StandardJavaFileManager = javaCompiler.getStandardFileManager(null, null, null)
 
