@@ -1,7 +1,6 @@
 package com.example.assignment.analysis
 
 import com.example.assignment.IncrementalJavaCompilerContext
-import com.example.assignment.entity.FileChanges
 import com.example.assignment.entity.FqName
 import com.example.assignment.storage.DependencyMapInMemoryStorage
 import com.example.assignment.storage.FileToFqnMapInMemoryStorage
@@ -14,20 +13,20 @@ class StaleOutputCleaner(
     private val dependencyMapInMemoryStorage: DependencyMapInMemoryStorage
 ) {
 
-    fun cleanStaleOutput(fileChanges: FileChanges, incrementalJavaCompilerContext: IncrementalJavaCompilerContext) {
-        val staleData = staleData(fileChanges)
+    fun cleanStaleOutput(removedFiles: Set<File>, incrementalJavaCompilerContext: IncrementalJavaCompilerContext) {
+        val staleData = staleData(removedFiles)
 
         deleteClassFiles(staleData.values.flatten(), incrementalJavaCompilerContext)
-        deleteFileToFqnEdge(fileChanges)
+        deleteFileToFqnEdge(removedFiles)
         deleteDependencyEdge(staleData.values.flatten())
     }
 
     private fun staleData(
-        fileChanges: FileChanges
+        removedFiles: Set<File>,
     ): Map<File, Set<FqName>> =
         fileToFqnMapInMemoryStorage.getAll()
             .filter { (file, _) ->
-                fileChanges.addedAndModifiedFiles.contains(file) || fileChanges.removedFiles.contains(file)
+                removedFiles.contains(file)
             }
 
     private fun deleteClassFiles(
@@ -51,9 +50,8 @@ class StaleOutputCleaner(
             }
     }
 
-    private fun deleteFileToFqnEdge(fileChanges: FileChanges) {
-        fileChanges.addedAndModifiedFiles.forEach { file -> fileToFqnMapInMemoryStorage.remove(file) }
-        fileChanges.removedFiles.forEach { file -> fileToFqnMapInMemoryStorage.remove(file) }
+    private fun deleteFileToFqnEdge(removedFiles: Set<File>) {
+        removedFiles.forEach { file -> fileToFqnMapInMemoryStorage.remove(file) }
     }
 
     private fun deleteDependencyEdge(fqnList: List<FqName>) {
