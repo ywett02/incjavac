@@ -9,6 +9,12 @@ class ClasspathDigestInMemoryStorage private constructor(
     storageFile: File,
 ) : DataStorageMap<File, String>(storageFile, mapSerializer(FileAsAbsPathSerializer, String.serializer())) {
 
+    fun getAllAndRemove(): Map<File, String> {
+        val data = getAll()
+        removeAll()
+        return data
+    }
+
     companion object {
         private const val STORAGE_FILE_NAME = "classpathDigest.json"
 

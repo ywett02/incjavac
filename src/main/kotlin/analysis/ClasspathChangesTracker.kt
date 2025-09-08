@@ -29,9 +29,7 @@ class ClasspathChangesTracker(
             }.map { file ->
                 file.absoluteFile
             }.associateWith { item -> item.md5 }
-        val previousMetadata = classpathDigestInMemoryStorage.getAll()
-
-        classpathDigestInMemoryStorage.removeAll()
+        val previousMetadata = classpathDigestInMemoryStorage.getAllAndRemove()
         classpathDigestInMemoryStorage.putAll(currentMetadata)
 
         return currentMetadata != previousMetadata
