@@ -2,15 +2,13 @@ package com.example.assignment.analysis
 
 import com.example.assignment.IncrementalJavaCompilerContext
 import com.example.assignment.entity.FqName
-import com.example.assignment.storage.DependencyMapInMemoryStorage
 import com.example.assignment.storage.FileToFqnMapInMemoryStorage
 import java.io.File
 import javax.tools.JavaFileObject
 import javax.tools.StandardLocation
 
 class StaleOutputCleaner(
-    private val fileToFqnMapInMemoryStorage: FileToFqnMapInMemoryStorage,
-    private val dependencyMapInMemoryStorage: DependencyMapInMemoryStorage
+    private val fileToFqnMapInMemoryStorage: FileToFqnMapInMemoryStorage
 ) {
 
     fun cleanStaleOutput(removedFiles: Set<File>, incrementalJavaCompilerContext: IncrementalJavaCompilerContext) {
@@ -18,7 +16,6 @@ class StaleOutputCleaner(
 
         deleteClassFiles(staleData.values.flatten(), incrementalJavaCompilerContext)
         deleteFileToFqnEdge(removedFiles)
-        deleteDependencyEdge(staleData.values.flatten())
     }
 
     private fun staleData(
@@ -52,11 +49,5 @@ class StaleOutputCleaner(
 
     private fun deleteFileToFqnEdge(removedFiles: Set<File>) {
         removedFiles.forEach { file -> fileToFqnMapInMemoryStorage.remove(file) }
-    }
-
-    private fun deleteDependencyEdge(fqnList: List<FqName>) {
-        fqnList.forEach { fqn ->
-            dependencyMapInMemoryStorage.remove(fqn)
-        }
     }
 }

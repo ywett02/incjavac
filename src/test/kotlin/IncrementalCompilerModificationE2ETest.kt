@@ -5,7 +5,7 @@ import com.example.assignment.analysis.constant.ConstantDependencyMapCollectorFa
 import com.example.assignment.entity.ExitCode
 import com.example.assignment.reporter.TestEventRecorder
 import com.example.assignment.storage.ClasspathDigestInMemoryStorage
-import com.example.assignment.storage.DependencyMapInMemoryStorage
+import com.example.assignment.storage.DependencyGraphInMemoryStorage
 import com.example.assignment.storage.FileDigestInMemoryStorage
 import com.example.assignment.storage.FileToFqnMapInMemoryStorage
 import org.junit.jupiter.api.BeforeEach
@@ -28,7 +28,7 @@ class IncrementalCompilationModificationE2ETest {
     private lateinit var fileDigestStorage: FileDigestInMemoryStorage
     private lateinit var classpathDigestStorage: ClasspathDigestInMemoryStorage
     private lateinit var fileToFqnStorage: FileToFqnMapInMemoryStorage
-    private lateinit var dependencyStorage: DependencyMapInMemoryStorage
+    private lateinit var dependencyStorage: DependencyGraphInMemoryStorage
 
     private lateinit var context: IncrementalJavaCompilerContext
 
@@ -44,7 +44,7 @@ class IncrementalCompilationModificationE2ETest {
         fileDigestStorage = FileDigestInMemoryStorage.create(metadataDir)
         classpathDigestStorage = ClasspathDigestInMemoryStorage.create(metadataDir)
         fileToFqnStorage = FileToFqnMapInMemoryStorage.create(metadataDir)
-        dependencyStorage = DependencyMapInMemoryStorage.create(metadataDir)
+        dependencyStorage = DependencyGraphInMemoryStorage.create(metadataDir)
 
         val fileChangesTracker = FileChangesTracker(fileDigestStorage)
         val classpathChangesTracker = ClasspathChangesTracker(classpathDigestStorage)
@@ -52,13 +52,21 @@ class IncrementalCompilationModificationE2ETest {
         val dependencyMapCollectorFactory = DependencyMapCollectorFactory(dependencyStorage)
         val fileToFqnMapCollectorFactory = FileToFqnMapCollectorFactory(fileToFqnStorage)
         val constantDependencyMapCollectorFactory = ConstantDependencyMapCollectorFactory(dependencyStorage)
-        val staleOutputCleaner = StaleOutputCleaner(fileToFqnStorage, dependencyStorage)
+        val staleOutputCleaner = StaleOutputCleaner(fileToFqnStorage)
 
         context = IncrementalJavaCompilerContext(
             src = srcDir,
             outputDir = outputDir,
             classpath = null,
-            javaCompiler = ToolProvider.getSystemJavaCompiler()
+            javaCompiler = ToolProvider.getSystemJavaCompiler(),
+            onCompilationCompleted = { exitCode ->
+                if(exitCode == ExitCode.OK) {
+                    fileDigestStorage.close()
+                    classpathDigestStorage.close()
+                    fileToFqnStorage.close()
+                    dependencyStorage.close()
+                }
+            }
         )
 
         eventRecorder = TestEventRecorder()
@@ -133,7 +141,7 @@ class IncrementalCompilationModificationE2ETest {
         """
         )
         incrementalJavaCompilerRunner.compile(context)
-        eventRecorder.clear()
+        setUp()
 
         independentClass2.writeText(
             """
@@ -195,7 +203,7 @@ class IncrementalCompilationModificationE2ETest {
         """
         )
         incrementalJavaCompilerRunner.compile(context)
-        eventRecorder.clear()
+        setUp()
 
         independentClass2.writeText(
             """
@@ -246,6 +254,7 @@ class IncrementalCompilationModificationE2ETest {
         """
         )
         incrementalJavaCompilerRunner.compile(context)
+        setUp()
 
         dependentClass.writeText(
             """
@@ -259,6 +268,7 @@ class IncrementalCompilationModificationE2ETest {
         """
         )
         incrementalJavaCompilerRunner.compile(context)
+        setUp()
 
         independentClass1.writeText(
             """
@@ -276,7 +286,6 @@ class IncrementalCompilationModificationE2ETest {
         """
         )
 
-        eventRecorder.clear()
         val compilationResult = incrementalJavaCompilerRunner.compile(context)
 
         assertEquals(ExitCode.OK, compilationResult)

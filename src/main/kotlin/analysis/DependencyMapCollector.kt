@@ -1,7 +1,7 @@
 package com.example.assignment.analysis
 
 import com.example.assignment.IncrementalJavaCompilerContext
-import com.example.assignment.storage.DependencyMapInMemoryStorage
+import com.example.assignment.storage.DependencyGraphInMemoryStorage
 import com.sun.source.util.TaskEvent
 import com.sun.source.util.TaskListener
 import org.objectweb.asm.ClassReader
@@ -14,7 +14,7 @@ import javax.tools.StandardLocation
 class DependencyMapCollector(
     private val elements: Elements,
     private val incrementalJavaCompilerContext: IncrementalJavaCompilerContext,
-    private val dependencyMapInMemoryStorage: DependencyMapInMemoryStorage
+    private val dependencyGraphInMemoryStorage: DependencyGraphInMemoryStorage
 ) : TaskListener {
     private val visitor: DependencyVisitor = DependencyVisitor()
 
@@ -33,7 +33,7 @@ class DependencyMapCollector(
         collectDependencies(javaFileObject)
 
         for ((fqName, dependencies) in visitor.globals) {
-            dependencyMapInMemoryStorage.append(fqName, dependencies)
+            dependencyGraphInMemoryStorage.addEdges(fqName, dependencies)
         }
     }
 

@@ -1,12 +1,12 @@
 package com.example.assignment.analysis.constant
 
-import com.example.assignment.storage.DependencyMapInMemoryStorage
+import com.example.assignment.storage.DependencyGraphInMemoryStorage
 import com.sun.source.util.*
 
 
 class ConstantDependencyMapCollector(
     task: JavacTask,
-    private val dependencyMapInMemoryStorage: DependencyMapInMemoryStorage
+    private val dependencyGraphInMemoryStorage: DependencyGraphInMemoryStorage
 ) : TaskListener {
 
     private val scanner = ConstantDependencyScanner(task.elements, Trees.instance(task))
@@ -20,7 +20,7 @@ class ConstantDependencyMapCollector(
         val context = scanner.scan(treePath, null)
 
         for ((fqName, dependencies) in context.dependencyMap) {
-            dependencyMapInMemoryStorage.append(fqName, dependencies)
+            dependencyGraphInMemoryStorage.addEdges(fqName, dependencies)
         }
     }
 }

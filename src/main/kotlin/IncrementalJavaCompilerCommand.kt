@@ -5,7 +5,7 @@ import com.example.assignment.analysis.constant.ConstantDependencyMapCollectorFa
 import com.example.assignment.entity.ExitCode
 import com.example.assignment.reporter.EventReporter
 import com.example.assignment.storage.ClasspathDigestInMemoryStorage
-import com.example.assignment.storage.DependencyMapInMemoryStorage
+import com.example.assignment.storage.DependencyGraphInMemoryStorage
 import com.example.assignment.storage.FileDigestInMemoryStorage
 import com.example.assignment.storage.FileToFqnMapInMemoryStorage
 import org.kohsuke.args4j.CmdLineException
@@ -86,8 +86,8 @@ class IncrementalJavaCompilerCommand private constructor() {
                 ClasspathDigestInMemoryStorage.create(incrementalJavaCompilerCommand.metadataDir)
             val fileToFqnMapInMemoryStorage =
                 FileToFqnMapInMemoryStorage.create(incrementalJavaCompilerCommand.metadataDir)
-            val dependencyMapInMemoryStorage =
-                DependencyMapInMemoryStorage.create(incrementalJavaCompilerCommand.metadataDir)
+            val dependencyGraphInMemoryStorage =
+                DependencyGraphInMemoryStorage.create(incrementalJavaCompilerCommand.metadataDir)
 
             val incrementalJavaCompilerContext = IncrementalJavaCompilerContext(
                 src = incrementalJavaCompilerCommand.src,
@@ -99,7 +99,7 @@ class IncrementalJavaCompilerCommand private constructor() {
                         fileDigestInMemoryStorage.close()
                         classpathDigestInMemoryStorage.close()
                         fileToFqnMapInMemoryStorage.close()
-                        dependencyMapInMemoryStorage.close()
+                        dependencyGraphInMemoryStorage.close()
                     }
                 }
             )
@@ -108,12 +108,12 @@ class IncrementalJavaCompilerCommand private constructor() {
                 IncrementalJavaCompilerRunner(
                     FileChangesTracker(fileDigestInMemoryStorage),
                     ClasspathChangesTracker(classpathDigestInMemoryStorage),
-                    DirtyFilesCalculator(fileToFqnMapInMemoryStorage, dependencyMapInMemoryStorage),
-                    DependencyMapCollectorFactory(dependencyMapInMemoryStorage),
+                    DirtyFilesCalculator(fileToFqnMapInMemoryStorage, dependencyGraphInMemoryStorage),
+                    DependencyMapCollectorFactory(dependencyGraphInMemoryStorage),
                     FileToFqnMapCollectorFactory(fileToFqnMapInMemoryStorage),
-                    ConstantDependencyMapCollectorFactory(dependencyMapInMemoryStorage),
+                    ConstantDependencyMapCollectorFactory(dependencyGraphInMemoryStorage),
                     StaleOutputCleaner(
-                        fileToFqnMapInMemoryStorage, dependencyMapInMemoryStorage
+                        fileToFqnMapInMemoryStorage
                     ),
                     eventReporter
                 )
