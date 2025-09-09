@@ -42,6 +42,12 @@ abstract class DataStorageMap<K, V>(
         }
     }
 
+    fun getAndRemove(key: K): V? {
+        val data = get(key)
+        remove(key)
+        return data
+    }
+
     fun getAll(): Map<K, V> {
         return storedData + inMemoryData - removedKeys
     }
