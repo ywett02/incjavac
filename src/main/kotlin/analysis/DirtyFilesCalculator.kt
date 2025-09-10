@@ -17,6 +17,7 @@ class DirtyFilesCalculator(
         changes: FileChanges,
         incrementalJavaCompilerContext: IncrementalJavaCompilerContext
     ): DirtyFiles {
+        //TODO this will not work for file addition
         val sourceFiles = changes.addedAndModifiedFiles + changes.removedFiles
 
         val sourceFilesToFqn = sourceFiles
@@ -29,6 +30,7 @@ class DirtyFilesCalculator(
         }.toSet()
 
         val dirtyFqn = sourceFilesToFqn + dependents
+
         val dirtySourceFiles: Set<File> =
             dirtyFqn.mapNotNull { fqn -> fqnToFileMapInMemoryStorage.getAndRemove(fqn) }.toSet()
 
@@ -42,4 +44,26 @@ class DirtyFilesCalculator(
             dirtyClassFiles = dirtyClassFiles
         )
     }
+
+//    fun calculateDirtyFiles(changes: FileChanges): Set<File> {
+//        val fileToFqnMap: Map<File, Set<FqName>> = fileToFqnMapInMemoryStorage.getAll()
+//        val invertedDependencyMap: Map<FqName, Set<FqName>> = dependencyMapInMemoryStorage.getAll().inverted()
+//        val fqnToFileMap: Map<FqName, Set<File>> = fileToFqnMap.inverted()
+//
+//        val sourceFiles = changes.addedAndModifiedFiles + changes.removedFiles
+//        return sourceFiles
+//            .asSequence()
+//            .flatMap { sourceFile: File ->
+//                fileToFqnMap.getOrDefault(sourceFile, emptySet())
+//            }
+//            .flatMap { classFqnName ->
+//                invertedDependencyMap.getOrDefault(classFqnName, emptySet())
+//            }
+//            .flatMap { dependencyFqnName ->
+//                fqnToFileMap.getOrDefault(dependencyFqnName, emptySet())
+//            }
+//            .plus(changes.addedAndModifiedFiles)
+//            .minus(changes.removedFiles)
+//            .toSet()
+//    }
 }

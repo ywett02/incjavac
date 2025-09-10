@@ -62,6 +62,7 @@ class IncrementalCompilationModificationE2ETest {
                     fileDigestStorage.close()
                     classpathDigestStorage.close()
                     fileToFqnStorage.close()
+                    fqnToFileStorage.close()
                     dependencyStorage.close()
                 }
             }

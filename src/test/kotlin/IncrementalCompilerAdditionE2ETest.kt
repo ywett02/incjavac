@@ -28,8 +28,6 @@ class IncrementalCompilationAdditionE2ETest {
     private lateinit var fqnToFileStorage: FqnToFileMapInMemoryStorage
     private lateinit var dependencyStorage: DependencyGraphInMemoryStorage
 
-    private lateinit var context: IncrementalJavaCompilerContext
-
     private lateinit var eventRecorder: TestEventRecorder
     private lateinit var incrementalJavaCompilerRunner: IncrementalJavaCompilerRunner
 
@@ -51,13 +49,6 @@ class IncrementalCompilationAdditionE2ETest {
         val dependencyMapCollectorFactory = DependencyMapCollectorFactory(dependencyStorage)
         val fileToFqnMapCollectorFactory = FileToFqnMapCollectorFactory(fileToFqnStorage, fqnToFileStorage)
         val constantDependencyMapCollectorFactory = ConstantDependencyMapCollectorFactory(dependencyStorage)
-
-        context = IncrementalJavaCompilerContext(
-            src = srcDir,
-            outputDir = outputDir,
-            classpath = null,
-            javaCompiler = ToolProvider.getSystemJavaCompiler()
-        )
 
         eventRecorder = TestEventRecorder()
         incrementalJavaCompilerRunner = IncrementalJavaCompilerRunner(
@@ -84,7 +75,7 @@ class IncrementalCompilationAdditionE2ETest {
             }
         """
         )
-        incrementalJavaCompilerRunner.compile(context)
+        incrementalJavaCompilerRunner.compile(createIncrementalJavaCompilerContext())
 
         createJavaFile(
             srcDir, "IndependentClass2.java", """
@@ -97,20 +88,31 @@ class IncrementalCompilationAdditionE2ETest {
             }
         """
         )
-        eventRecorder.clear()
-        context = IncrementalJavaCompilerContext(
-            src = srcDir,
-            outputDir = outputDir,
-            classpath = null,
-            javaCompiler = ToolProvider.getSystemJavaCompiler()
-        )
-        val compilationResult = incrementalJavaCompilerRunner.compile(context)
+
+        val compilationResult = incrementalJavaCompilerRunner.compile(createIncrementalJavaCompilerContext())
 
         assertEquals(ExitCode.OK, compilationResult)
         val dirtyFileMessage = eventRecorder.events.first { message -> message.contains("Dirty files:") }
         assertTrue { dirtyFileMessage.contains("IndependentClass2.java") }
         assertFalse { dirtyFileMessage.contains("IndependentClass1.java") }
     }
+
+    private fun createIncrementalJavaCompilerContext(): IncrementalJavaCompilerContext =
+        IncrementalJavaCompilerContext(
+            src = srcDir,
+            outputDir = outputDir,
+            classpath = null,
+            javaCompiler = ToolProvider.getSystemJavaCompiler(),
+            onCompilationCompleted = { exitCode ->
+                if (exitCode == ExitCode.OK) {
+                    fileDigestStorage.close()
+                    classpathDigestStorage.close()
+                    fileToFqnStorage.close()
+                    fqnToFileStorage.close()
+                    dependencyStorage.close()
+                }
+            }
+        )
 
     private fun createJavaFile(srcDir: File, name: String, content: String): File {
         val packageDir = File(srcDir, "com/example/test")
