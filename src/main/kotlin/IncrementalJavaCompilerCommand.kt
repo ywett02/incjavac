@@ -8,6 +8,7 @@ import com.example.assignment.storage.ClasspathDigestInMemoryStorage
 import com.example.assignment.storage.DependencyGraphInMemoryStorage
 import com.example.assignment.storage.FileDigestInMemoryStorage
 import com.example.assignment.storage.FileToFqnMapInMemoryStorage
+import com.example.assignment.storage.FqnToFileMapInMemoryStorage
 import org.kohsuke.args4j.CmdLineException
 import org.kohsuke.args4j.CmdLineParser
 import org.kohsuke.args4j.Option
@@ -86,6 +87,8 @@ class IncrementalJavaCompilerCommand private constructor() {
                 ClasspathDigestInMemoryStorage.create(incrementalJavaCompilerCommand.metadataDir)
             val fileToFqnMapInMemoryStorage =
                 FileToFqnMapInMemoryStorage.create(incrementalJavaCompilerCommand.metadataDir)
+            val fqnToFileMapInMemoryStorage =
+                FqnToFileMapInMemoryStorage.create(incrementalJavaCompilerCommand.metadataDir)
             val dependencyGraphInMemoryStorage =
                 DependencyGraphInMemoryStorage.create(incrementalJavaCompilerCommand.metadataDir)
 
@@ -94,11 +97,13 @@ class IncrementalJavaCompilerCommand private constructor() {
                 outputDir = incrementalJavaCompilerCommand.cacheDir.resolve(DEFAULT_DIRECTORY_DIR_NAME),
                 classpath = incrementalJavaCompilerCommand.classpath,
                 javaCompiler = ToolProvider.getSystemJavaCompiler(),
+                //TODO you should do something about this
                 onCompilationCompleted = { exitCode ->
                     if (exitCode == ExitCode.OK) {
                         fileDigestInMemoryStorage.close()
                         classpathDigestInMemoryStorage.close()
                         fileToFqnMapInMemoryStorage.close()
+                        fqnToFileMapInMemoryStorage.close()
                         dependencyGraphInMemoryStorage.close()
                     }
                 }
@@ -108,9 +113,9 @@ class IncrementalJavaCompilerCommand private constructor() {
                 IncrementalJavaCompilerRunner(
                     FileChangesTracker(fileDigestInMemoryStorage),
                     ClasspathChangesTracker(classpathDigestInMemoryStorage),
-                    DirtyFilesCalculator(fileToFqnMapInMemoryStorage, dependencyGraphInMemoryStorage),
+                    DirtyFilesCalculator(fileToFqnMapInMemoryStorage,fqnToFileMapInMemoryStorage,  dependencyGraphInMemoryStorage),
                     DependencyMapCollectorFactory(dependencyGraphInMemoryStorage),
-                    FileToFqnMapCollectorFactory(fileToFqnMapInMemoryStorage),
+                    FileToFqnMapCollectorFactory( fileToFqnMapInMemoryStorage, fqnToFileMapInMemoryStorage),
                     ConstantDependencyMapCollectorFactory(dependencyGraphInMemoryStorage),
                     StaleOutputCleaner(
                         fileToFqnMapInMemoryStorage

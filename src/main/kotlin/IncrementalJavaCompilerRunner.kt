@@ -80,18 +80,18 @@ class IncrementalJavaCompilerRunner(
                 return CompilationResult.RequiresRecompilation("Classpath has changed")
             }
 
-            val dirtyFiles = dirtyFilesCalculator.calculateDirtyFiles(fileChanges)
+            val dirtyFiles = dirtyFilesCalculator.calculateDirtyFiles(fileChanges, incrementalJavaCompilerContext)
             eventReporter.reportEvent(
-                "Dirty files: [${dirtyFiles.joinToString()}]"
+                "Dirty files: [${dirtyFiles.dirtySourceFiles.joinToString()}]"
             )
 
             staleOutputCleaner.cleanStaleOutput(fileChanges.removedFiles, incrementalJavaCompilerContext)
 
-            if (dirtyFiles.isEmpty()) {
+            if (dirtyFiles.dirtySourceFiles.isEmpty()) {
                 return CompilationResult.Success(OK)
             }
 
-            return CompilationResult.Success(runCompilation(dirtyFiles, incrementalJavaCompilerContext))
+            return CompilationResult.Success(runCompilation(dirtyFiles.dirtySourceFiles, incrementalJavaCompilerContext))
         } catch (e: Throwable) {
             eventReporter.reportEvent(
                 "Compilation failed due to internal error: ${e.message}"
