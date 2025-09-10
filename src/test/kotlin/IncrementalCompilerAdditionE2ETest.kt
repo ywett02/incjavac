@@ -4,10 +4,7 @@ import com.example.assignment.analysis.*
 import com.example.assignment.analysis.constant.ConstantDependencyMapCollectorFactory
 import com.example.assignment.entity.ExitCode
 import com.example.assignment.reporter.TestEventRecorder
-import com.example.assignment.storage.ClasspathDigestInMemoryStorage
-import com.example.assignment.storage.DependencyGraphInMemoryStorage
-import com.example.assignment.storage.FileDigestInMemoryStorage
-import com.example.assignment.storage.FileToFqnMapInMemoryStorage
+import com.example.assignment.storage.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
@@ -28,6 +25,7 @@ class IncrementalCompilationAdditionE2ETest {
     private lateinit var fileDigestStorage: FileDigestInMemoryStorage
     private lateinit var classpathDigestStorage: ClasspathDigestInMemoryStorage
     private lateinit var fileToFqnStorage: FileToFqnMapInMemoryStorage
+    private lateinit var fqnToFileStorage: FqnToFileMapInMemoryStorage
     private lateinit var dependencyStorage: DependencyGraphInMemoryStorage
 
     private lateinit var context: IncrementalJavaCompilerContext
@@ -44,14 +42,14 @@ class IncrementalCompilationAdditionE2ETest {
         fileDigestStorage = FileDigestInMemoryStorage.create(metadataDir)
         classpathDigestStorage = ClasspathDigestInMemoryStorage.create(metadataDir)
         fileToFqnStorage = FileToFqnMapInMemoryStorage.create(metadataDir)
+        fqnToFileStorage = FqnToFileMapInMemoryStorage.create(metadataDir)
         dependencyStorage = DependencyGraphInMemoryStorage.create(metadataDir)
 
         val fileChangesTracker = FileChangesTracker(fileDigestStorage)
         val classpathChangesTracker = ClasspathChangesTracker(classpathDigestStorage)
-        val dirtyFilesCalculator = DirtyFilesCalculator(fileToFqnStorage, dependencyStorage)
+        val dirtyFilesCalculator = DirtyFilesCalculator(fileToFqnStorage, fqnToFileStorage, dependencyStorage)
         val dependencyMapCollectorFactory = DependencyMapCollectorFactory(dependencyStorage)
-        val fileToFqnMapCollectorFactory = FileToFqnMapCollectorFactory(fileToFqnStorage)
-        val fileToFqnMapCollectorFactory = FileToFqnMapCollectorFactory(fileToFqnStorage)
+        val fileToFqnMapCollectorFactory = FileToFqnMapCollectorFactory(fileToFqnStorage, fqnToFileStorage)
         val constantDependencyMapCollectorFactory = ConstantDependencyMapCollectorFactory(dependencyStorage)
 
         context = IncrementalJavaCompilerContext(
