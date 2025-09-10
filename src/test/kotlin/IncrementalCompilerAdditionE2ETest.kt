@@ -51,8 +51,8 @@ class IncrementalCompilationAdditionE2ETest {
         val dirtyFilesCalculator = DirtyFilesCalculator(fileToFqnStorage, dependencyStorage)
         val dependencyMapCollectorFactory = DependencyMapCollectorFactory(dependencyStorage)
         val fileToFqnMapCollectorFactory = FileToFqnMapCollectorFactory(fileToFqnStorage)
+        val fileToFqnMapCollectorFactory = FileToFqnMapCollectorFactory(fileToFqnStorage)
         val constantDependencyMapCollectorFactory = ConstantDependencyMapCollectorFactory(dependencyStorage)
-        val staleOutputCleaner = StaleOutputCleaner(fileToFqnStorage)
 
         context = IncrementalJavaCompilerContext(
             src = srcDir,
@@ -69,7 +69,6 @@ class IncrementalCompilationAdditionE2ETest {
             dependencyMapCollectorFactory,
             fileToFqnMapCollectorFactory,
             constantDependencyMapCollectorFactory,
-            staleOutputCleaner,
             eventRecorder
         )
     }

@@ -4,11 +4,7 @@ import com.example.assignment.analysis.*
 import com.example.assignment.analysis.constant.ConstantDependencyMapCollectorFactory
 import com.example.assignment.entity.ExitCode
 import com.example.assignment.reporter.EventReporter
-import com.example.assignment.storage.ClasspathDigestInMemoryStorage
-import com.example.assignment.storage.DependencyGraphInMemoryStorage
-import com.example.assignment.storage.FileDigestInMemoryStorage
-import com.example.assignment.storage.FileToFqnMapInMemoryStorage
-import com.example.assignment.storage.FqnToFileMapInMemoryStorage
+import com.example.assignment.storage.*
 import org.kohsuke.args4j.CmdLineException
 import org.kohsuke.args4j.CmdLineParser
 import org.kohsuke.args4j.Option
@@ -117,9 +113,6 @@ class IncrementalJavaCompilerCommand private constructor() {
                     DependencyMapCollectorFactory(dependencyGraphInMemoryStorage),
                     FileToFqnMapCollectorFactory( fileToFqnMapInMemoryStorage, fqnToFileMapInMemoryStorage),
                     ConstantDependencyMapCollectorFactory(dependencyGraphInMemoryStorage),
-                    StaleOutputCleaner(
-                        fileToFqnMapInMemoryStorage
-                    ),
                     eventReporter
                 )
 

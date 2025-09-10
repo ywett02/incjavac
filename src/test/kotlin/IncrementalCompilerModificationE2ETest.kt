@@ -52,7 +52,6 @@ class IncrementalCompilationModificationE2ETest {
         val dependencyMapCollectorFactory = DependencyMapCollectorFactory(dependencyStorage)
         val fileToFqnMapCollectorFactory = FileToFqnMapCollectorFactory(fileToFqnStorage)
         val constantDependencyMapCollectorFactory = ConstantDependencyMapCollectorFactory(dependencyStorage)
-        val staleOutputCleaner = StaleOutputCleaner(fileToFqnStorage)
 
         context = IncrementalJavaCompilerContext(
             src = srcDir,

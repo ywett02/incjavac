@@ -18,7 +18,6 @@ class IncrementalJavaCompilerRunner(
     private val dependencyMapCollectorFactory: DependencyMapCollectorFactory,
     private val fileToFqnMapCollectorFactory: FileToFqnMapCollectorFactory,
     private val constantDependencyMapCollectorFactory: ConstantDependencyMapCollectorFactory,
-    private val staleOutputCleaner: StaleOutputCleaner,
     private val eventReporter: EventReporter
 ) {
 
@@ -85,11 +84,11 @@ class IncrementalJavaCompilerRunner(
                 "Dirty files: [${dirtyFiles.dirtySourceFiles.joinToString()}]"
             )
 
-            staleOutputCleaner.cleanStaleOutput(fileChanges.removedFiles, incrementalJavaCompilerContext)
-
-            if (dirtyFiles.dirtySourceFiles.isEmpty()) {
+            if (dirtyFiles.isEmpty()) {
                 return CompilationResult.Success(OK)
             }
+
+            dirtyFiles.dirtyClassFiles.forEach { file -> file.delete() }
 
             return CompilationResult.Success(runCompilation(dirtyFiles.dirtySourceFiles, incrementalJavaCompilerContext))
         } catch (e: Throwable) {
