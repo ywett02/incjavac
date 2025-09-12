@@ -159,9 +159,12 @@ class IncrementalCompilationModificationE2ETest {
         val compilationResult = incrementalJavaCompilerRunner.compile(context)
 
         assertEquals(ExitCode.OK, compilationResult)
-        val dirtyFileMessage = eventRecorder.events.first { message -> message.contains("Dirty files:") }
+        val dirtyFileMessage = eventRecorder.events.first { message -> message.contains("Dirty source files:") }
         assertTrue { dirtyFileMessage.contains("IndependentClass2.java") }
         assertFalse { dirtyFileMessage.contains("IndependentClass1.java") }
+        val dirtyClassMessage = eventRecorder.events.first { message -> message.contains("Dirty class files:") }
+        assertTrue { dirtyClassMessage.contains("IndependentClass2.class") }
+        assertFalse { dirtyClassMessage.contains("IndependentClass1.class") }
     }
 
     @Test
@@ -221,10 +224,14 @@ class IncrementalCompilationModificationE2ETest {
         val compilationResult = incrementalJavaCompilerRunner.compile(context)
 
         assertEquals(ExitCode.OK, compilationResult)
-        val dirtyFileMessage = eventRecorder.events.first { message -> message.contains("Dirty files:") }
+        val dirtyFileMessage = eventRecorder.events.first { message -> message.contains("Dirty source files:") }
         assertTrue { dirtyFileMessage.contains("IndependentClass2.java") }
         assertTrue { dirtyFileMessage.contains("DependentClass.java") }
         assertFalse { dirtyFileMessage.contains("IndependentClass1.java") }
+        val dirtyClassMessage = eventRecorder.events.first { message -> message.contains("Dirty class files:") }
+        assertTrue { dirtyClassMessage.contains("IndependentClass2.class") }
+        assertTrue { dirtyClassMessage.contains("DependentClass.class") }
+        assertFalse { dirtyClassMessage.contains("IndependentClass1.class") }
     }
 
     @Test
@@ -287,9 +294,12 @@ class IncrementalCompilationModificationE2ETest {
         val compilationResult = incrementalJavaCompilerRunner.compile(context)
 
         assertEquals(ExitCode.OK, compilationResult)
-        val dirtyFileMessage = eventRecorder.events.first { message -> message.contains("Dirty files:") }
+        val dirtyFileMessage = eventRecorder.events.first { message -> message.contains("Dirty source files:") }
         assertTrue { dirtyFileMessage.contains("IndependentClass1.java") }
         assertFalse { dirtyFileMessage.contains("DependentClass.java") }
+        val dirtyClassMessage = eventRecorder.events.first { message -> message.contains("Dirty class files:") }
+        assertTrue { dirtyClassMessage.contains("IndependentClass1.class") }
+        assertFalse { dirtyClassMessage.contains("DependentClass.class") }
     }
 
     private fun createJavaFile(srcDir: File, name: String, content: String): File {

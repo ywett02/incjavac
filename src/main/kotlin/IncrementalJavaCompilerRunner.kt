@@ -80,17 +80,23 @@ class IncrementalJavaCompilerRunner(
             }
 
             val dirtyFiles = dirtyFilesCalculator.calculateDirtyFiles(fileChanges, incrementalJavaCompilerContext)
-            eventReporter.reportEvent(
-                "Dirty files: [${dirtyFiles.dirtySourceFiles.joinToString()}]"
-            )
+            eventReporter.run {
+                reportEvent("Dirty source files: [${dirtyFiles.dirtySourceFiles.joinToString()}]")
+                reportEvent("Dirty class files: [${dirtyFiles.dirtyClassFiles.joinToString()}]")
+            }
+
+            dirtyFiles.dirtyClassFiles.forEach { file -> file.delete() }
 
             if (dirtyFiles.isEmpty()) {
                 return CompilationResult.Success(OK)
             }
 
-            dirtyFiles.dirtyClassFiles.forEach { file -> file.delete() }
-
-            return CompilationResult.Success(runCompilation(dirtyFiles.dirtySourceFiles, incrementalJavaCompilerContext))
+            return CompilationResult.Success(
+                runCompilation(
+                    dirtyFiles.dirtySourceFiles,
+                    incrementalJavaCompilerContext
+                )
+            )
         } catch (e: Throwable) {
             eventReporter.reportEvent(
                 "Compilation failed due to internal error: ${e.message}"

@@ -92,9 +92,12 @@ class IncrementalCompilationAdditionE2ETest {
         val compilationResult = incrementalJavaCompilerRunner.compile(createIncrementalJavaCompilerContext())
 
         assertEquals(ExitCode.OK, compilationResult)
-        val dirtyFileMessage = eventRecorder.events.first { message -> message.contains("Dirty files:") }
+        val dirtyFileMessage = eventRecorder.events.first { message -> message.contains("Dirty source files:") }
         assertTrue { dirtyFileMessage.contains("IndependentClass2.java") }
         assertFalse { dirtyFileMessage.contains("IndependentClass1.java") }
+        val dirtyClassMessage = eventRecorder.events.first { message -> message.contains("Dirty class files:") }
+        assertFalse { dirtyClassMessage.contains("IndependentClass2.class") }
+        assertFalse { dirtyClassMessage.contains("IndependentClass1.class") }
     }
 
     private fun createIncrementalJavaCompilerContext(): IncrementalJavaCompilerContext =

@@ -17,27 +17,20 @@ class DirtyFilesCalculator(
         changes: FileChanges,
         incrementalJavaCompilerContext: IncrementalJavaCompilerContext
     ): DirtyFiles {
-        //TODO this will not work for file addition
-        val sourceFiles = changes.addedAndModifiedFiles + changes.removedFiles
+        val dirtySourceFiles = mutableSetOf<File>().apply {
+            addAll(changes.addedAndModifiedFiles)
+            addAll(getDependencies(changes.addedAndModifiedFiles + changes.removedFiles))
 
-        val sourceFilesToFqn = sourceFiles
+            removeAll(changes.removedFiles)
+        }
+
+        val dirtyClassFiles = dirtySourceFiles
             .flatMap { file ->
                 fileToFqnMapInMemoryStorage.getAndRemove(file) ?: emptySet()
+            }.map { fqn ->
+                val relativePath = fqn.id.split(".").joinToString(File.separator)
+                incrementalJavaCompilerContext.outputDir.resolve("$relativePath.class").absoluteFile
             }.toSet()
-
-        val dependents = sourceFilesToFqn.flatMap { fqn ->
-            dependencyGraphInMemoryStorage.getNodeAndRemove(fqn)?.parents?.map { it.value } ?: emptySet()
-        }.toSet()
-
-        val dirtyFqn = sourceFilesToFqn + dependents
-
-        val dirtySourceFiles: Set<File> =
-            dirtyFqn.mapNotNull { fqn -> fqnToFileMapInMemoryStorage.getAndRemove(fqn) }.toSet()
-
-        val dirtyClassFiles = dirtyFqn.map { fqn ->
-            val relativePath = fqn.id.split(".").joinToString(File.separator)
-            incrementalJavaCompilerContext.outputDir.resolve(relativePath).absoluteFile
-        }.toSet()
 
         return DirtyFiles(
             dirtySourceFiles = dirtySourceFiles,
@@ -45,25 +38,13 @@ class DirtyFilesCalculator(
         )
     }
 
-//    fun calculateDirtyFiles(changes: FileChanges): Set<File> {
-//        val fileToFqnMap: Map<File, Set<FqName>> = fileToFqnMapInMemoryStorage.getAll()
-//        val invertedDependencyMap: Map<FqName, Set<FqName>> = dependencyMapInMemoryStorage.getAll().inverted()
-//        val fqnToFileMap: Map<FqName, Set<File>> = fileToFqnMap.inverted()
-//
-//        val sourceFiles = changes.addedAndModifiedFiles + changes.removedFiles
-//        return sourceFiles
-//            .asSequence()
-//            .flatMap { sourceFile: File ->
-//                fileToFqnMap.getOrDefault(sourceFile, emptySet())
-//            }
-//            .flatMap { classFqnName ->
-//                invertedDependencyMap.getOrDefault(classFqnName, emptySet())
-//            }
-//            .flatMap { dependencyFqnName ->
-//                fqnToFileMap.getOrDefault(dependencyFqnName, emptySet())
-//            }
-//            .plus(changes.addedAndModifiedFiles)
-//            .minus(changes.removedFiles)
-//            .toSet()
-//    }
+    private fun getDependencies(dirtySourceFiles: Set<File>): Set<File> =
+        dirtySourceFiles
+            .flatMap { file ->
+                fileToFqnMapInMemoryStorage.get(file) ?: emptySet()
+            }.flatMap { fqn ->
+                dependencyGraphInMemoryStorage.getNodeAndRemove(fqn)?.parents?.map { it.value } ?: emptySet()
+            }.mapNotNull { fqn ->
+                fqnToFileMapInMemoryStorage.getAndRemove(fqn)
+            }.toSet()
 }
