@@ -46,7 +46,7 @@ import java.util.Set;
  */
 public class DependencyVisitor extends ClassVisitor {
 
-    Map<FqName, Set<FqName>> groups = new HashMap<FqName, Set<FqName>>();
+    Map<FqName, Set<FqName>> groups = new HashMap<>();
 
     FqName currentKey;
     Set<FqName> currentValue;
@@ -56,7 +56,11 @@ public class DependencyVisitor extends ClassVisitor {
     }
 
     public DependencyVisitor() {
-        super(Opcodes.ASM9);
+        this(null);
+    }
+
+    public DependencyVisitor(ClassWriter writer) {
+        super(Opcodes.ASM9, writer);
     }
 
     // ClassVisitor
