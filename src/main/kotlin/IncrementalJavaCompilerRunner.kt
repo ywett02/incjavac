@@ -89,7 +89,7 @@ class IncrementalJavaCompilerRunner(
 
             backupClassFiles(dirtyFiles.dirtyClassFiles, incrementalJavaCompilerContext)
 
-            if (dirtyFiles.isEmpty()) {
+            if (dirtyFiles.dirtySourceFiles.isEmpty()) {
                 return CompilationResult.Success(OK)
             }
 
