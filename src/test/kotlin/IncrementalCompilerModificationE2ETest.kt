@@ -20,6 +20,7 @@ class IncrementalCompilationModificationE2ETest {
     lateinit var tempDir: File
     private lateinit var srcDir: File
     private lateinit var outputDir: File
+    private lateinit var outputDirBackup: File
     private lateinit var metadataDir: File
 
     private lateinit var fileDigestStorage: FileDigestInMemoryStorage
@@ -37,6 +38,7 @@ class IncrementalCompilationModificationE2ETest {
     fun setUp() {
         srcDir = File(tempDir, "src")
         outputDir = File(tempDir, "build/classes")
+        outputDirBackup = File(tempDir, "build/cache/backup")
         metadataDir = File(tempDir, "build/cache")
 
         fileDigestStorage = FileDigestInMemoryStorage.create(metadataDir)
@@ -55,6 +57,7 @@ class IncrementalCompilationModificationE2ETest {
         context = IncrementalJavaCompilerContext(
             src = srcDir,
             outputDir = outputDir,
+            outputDirBackup = outputDirBackup,
             classpath = null,
             javaCompiler = ToolProvider.getSystemJavaCompiler(),
             onCompilationCompleted = { exitCode ->

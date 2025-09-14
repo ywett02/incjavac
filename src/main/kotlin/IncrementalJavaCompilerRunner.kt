@@ -10,6 +10,8 @@ import com.example.assignment.entity.FileChanges
 import com.example.assignment.reporter.EventReporter
 import com.sun.source.util.JavacTask
 import java.io.File
+import java.nio.file.Files
+import java.nio.file.StandardCopyOption
 
 class IncrementalJavaCompilerRunner(
     private val fileChangesTracker: FileChangesTracker,
@@ -85,7 +87,7 @@ class IncrementalJavaCompilerRunner(
                 reportEvent("Dirty class files: [${dirtyFiles.dirtyClassFiles.joinToString()}]")
             }
 
-            dirtyFiles.dirtyClassFiles.forEach { file -> file.delete() }
+            backupClassFiles(dirtyFiles.dirtyClassFiles, incrementalJavaCompilerContext)
 
             if (dirtyFiles.isEmpty()) {
                 return CompilationResult.Success(OK)
@@ -99,10 +101,29 @@ class IncrementalJavaCompilerRunner(
             )
         } catch (e: Throwable) {
             eventReporter.reportEvent(
-                "Compilation failed due to internal error: ${e.message}"
+                "Compilation failed due to internal error: ${e.localizedMessage}"
             )
 
             return CompilationResult.Error(e)
+        }
+    }
+
+    private fun backupClassFiles(
+        classFiles: Set<File>,
+        incrementalJavaCompilerContext: IncrementalJavaCompilerContext
+    ) {
+        classFiles.forEach { file ->
+            val relativePath = file.relativeTo(incrementalJavaCompilerContext.outputDir)
+            val backupFile =
+                incrementalJavaCompilerContext.outputDirBackup.resolve(relativePath.path).also { file ->
+                    file.parentFile?.mkdirs()
+                }
+
+            Files.move(
+                file.toPath(),
+                backupFile.toPath(),
+                StandardCopyOption.REPLACE_EXISTING
+            )
         }
     }
 

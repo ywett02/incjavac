@@ -8,6 +8,7 @@ import javax.tools.StandardJavaFileManager
 data class IncrementalJavaCompilerContext(
     val src: File,
     val outputDir: File,
+    val outputDirBackup: File,
     val classpath: String?,
     val javaCompiler: JavaCompiler,
     val onCompilationCompleted: (ExitCode) -> Unit = {},

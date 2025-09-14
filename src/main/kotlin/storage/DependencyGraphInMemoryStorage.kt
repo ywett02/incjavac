@@ -11,7 +11,7 @@ class DependencyGraphInMemoryStorage private constructor(
     FqNameAsStringSerializer
 ) {
     companion object {
-        private const val STORAGE_FILE_NAME = "dependencyMap.json"
+        private const val STORAGE_FILE_NAME = "dependencyGraph.json"
 
         fun create(cacheDir: File): DependencyGraphInMemoryStorage {
             return DependencyGraphInMemoryStorage(cacheDir.resolve(STORAGE_FILE_NAME))

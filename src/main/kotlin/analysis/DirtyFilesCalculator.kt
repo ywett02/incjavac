@@ -24,7 +24,7 @@ class DirtyFilesCalculator(
             removeAll(changes.removedFiles)
         }
 
-        val dirtyClassFiles = dirtySourceFiles
+        val dirtyClassFiles = (dirtySourceFiles + changes.removedFiles)
             .flatMap { file ->
                 fileToFqnMapInMemoryStorage.getAndRemove(file) ?: emptySet()
             }.map { fqn ->
