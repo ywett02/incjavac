@@ -142,6 +142,7 @@ class IncrementalJavaCompilerCommand private constructor() {
             return incrementalJavaCompilerRunner.compile(incrementalJavaCompilerContext)
         }
 
+        //TODO this won't be testable
         private fun revertClassFiles(incrementalJavaCompilerCommand: IncrementalJavaCompilerCommand) {
             incrementalJavaCompilerCommand.directoryBackup.walk()
                 .filter { it.isFile }
