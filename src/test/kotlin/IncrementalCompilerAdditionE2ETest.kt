@@ -3,7 +3,10 @@ package com.example.assignment
 import com.example.assignment.analysis.*
 import com.example.assignment.analysis.constant.ConstantDependencyMapCollectorFactory
 import com.example.assignment.entity.ExitCode
+import com.example.assignment.reporter.NoOpReporter
 import com.example.assignment.reporter.TestEventRecorder
+import com.example.assignment.resource.impl.AutoCloseableResourceManager
+import com.example.assignment.resource.impl.asResource
 import com.example.assignment.storage.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -102,23 +105,24 @@ class IncrementalCompilationAdditionE2ETest {
         assertFalse { dirtyClassMessage.contains("IndependentClass1.class") }
     }
 
-    private fun createIncrementalJavaCompilerContext(): IncrementalJavaCompilerContext =
-        IncrementalJavaCompilerContext(
+    private fun createIncrementalJavaCompilerContext(): IncrementalJavaCompilerContext {
+        val resourceManager = AutoCloseableResourceManager(NoOpReporter).apply {
+            registerResource(fileDigestStorage.asResource())
+            registerResource(classpathDigestStorage.asResource())
+            registerResource(fileToFqnStorage.asResource())
+            registerResource(fqnToFileStorage.asResource())
+            registerResource(dependencyStorage.asResource())
+        }
+
+        return IncrementalJavaCompilerContext(
             src = srcDir,
             outputDir = outputDir,
             outputDirBackup = outputDirBackup,
             classpath = null,
             javaCompiler = ToolProvider.getSystemJavaCompiler(),
-            onCompilationCompleted = { exitCode ->
-                if (exitCode == ExitCode.OK) {
-                    fileDigestStorage.close()
-                    classpathDigestStorage.close()
-                    fileToFqnStorage.close()
-                    fqnToFileStorage.close()
-                    dependencyStorage.close()
-                }
-            }
+            resourceManager = resourceManager
         )
+    }
 
     private fun createJavaFile(srcDir: File, name: String, content: String): File {
         val packageDir = File(srcDir, "com/example/test")

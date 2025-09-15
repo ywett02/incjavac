@@ -3,7 +3,10 @@ package com.example.assignment
 import com.example.assignment.analysis.*
 import com.example.assignment.analysis.constant.ConstantDependencyMapCollectorFactory
 import com.example.assignment.entity.ExitCode
+import com.example.assignment.reporter.NoOpReporter
 import com.example.assignment.reporter.TestEventRecorder
+import com.example.assignment.resource.impl.AutoCloseableResourceManager
+import com.example.assignment.resource.impl.asResource
 import com.example.assignment.storage.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -54,21 +57,21 @@ class IncrementalCompilationModificationE2ETest {
         val fileToFqnMapCollectorFactory = FileToFqnMapCollectorFactory(fileToFqnStorage, fqnToFileStorage)
         val constantDependencyMapCollectorFactory = ConstantDependencyMapCollectorFactory(dependencyStorage)
 
+        val resourceManager = AutoCloseableResourceManager(NoOpReporter).apply {
+            registerResource(fileDigestStorage.asResource())
+            registerResource(classpathDigestStorage.asResource())
+            registerResource(fileToFqnStorage.asResource())
+            registerResource(fqnToFileStorage.asResource())
+            registerResource(dependencyStorage.asResource())
+        }
+
         context = IncrementalJavaCompilerContext(
             src = srcDir,
             outputDir = outputDir,
             outputDirBackup = outputDirBackup,
             classpath = null,
             javaCompiler = ToolProvider.getSystemJavaCompiler(),
-            onCompilationCompleted = { exitCode ->
-                if(exitCode == ExitCode.OK) {
-                    fileDigestStorage.close()
-                    classpathDigestStorage.close()
-                    fileToFqnStorage.close()
-                    fqnToFileStorage.close()
-                    dependencyStorage.close()
-                }
-            }
+            resourceManager = resourceManager
         )
 
         eventRecorder = TestEventRecorder()

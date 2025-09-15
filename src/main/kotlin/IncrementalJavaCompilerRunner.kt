@@ -59,10 +59,11 @@ class IncrementalJavaCompilerRunner(
                     }
                 }
 
-            incrementalJavaCompilerContext.onCompilationCompleted(exitCode)
+            incrementalJavaCompilerContext.resourceManager.cleanup(exitCode)
             return exitCode
         } catch (e: Throwable) {
             eventReporter.reportEvent("Compilation failed due to internal error: ${e.message}")
+            incrementalJavaCompilerContext.resourceManager.cleanup(ExitCode.INTERNAL_ERROR)
             return ExitCode.INTERNAL_ERROR
         }
     }
@@ -179,7 +180,7 @@ class IncrementalJavaCompilerRunner(
             }
         }
 
-        return buildList<String> {
+        return buildList {
             add("-cp")
             add(classpath)
 
