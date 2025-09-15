@@ -1,8 +1,9 @@
-package com.example.assignment.storage
+package com.example.assignment.storage.inMemory
 
 import com.example.assignment.entity.FqName
 import com.example.assignment.entity.serializer.FileAsAbsPathSerializer
 import com.example.assignment.entity.serializer.FqNameAsStringSerializer
+import com.example.assignment.storage.DataStorageMap
 import com.example.assignment.util.mapOfSetsSerializer
 import java.io.File
 

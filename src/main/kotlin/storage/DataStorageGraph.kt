@@ -11,7 +11,7 @@ import java.io.File
 abstract class DataStorageGraph<T>(
     private val storageFile: File,
     valueSerializer: KSerializer<T>
-) : Closeable {
+) : Storage {
 
     private val serializer = GraphSerializer(valueSerializer)
 
@@ -55,7 +55,7 @@ abstract class DataStorageGraph<T>(
         }
     }
 
-    override fun close() {
+    override fun flush() {
         val data = storedData + inMemoryData - removedKeys
         getStorageFileOrCreateNew().writeText(Json.Default.encodeToString(serializer, data))
     }

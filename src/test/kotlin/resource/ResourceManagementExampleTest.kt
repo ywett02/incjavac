@@ -4,6 +4,7 @@ import com.example.assignment.entity.ExitCode
 import com.example.assignment.reporter.NoOpReporter
 import com.example.assignment.resource.impl.AutoCloseableResourceManager
 import com.example.assignment.resource.impl.asResource
+import com.example.assignment.storage.Storage
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import java.io.Closeable
@@ -52,10 +53,10 @@ class ResourceManagementExampleTest {
         assertTrue(mockCustomResource.failureCalled)
     }
 
-    private class MockStorage(private val name: String) : Closeable {
+    private class MockStorage(private val name: String) : Storage {
         var closed = false
-        
-        override fun close() {
+
+        override fun flush() {
             closed = true
             println("MockStorage $name closed")
         }

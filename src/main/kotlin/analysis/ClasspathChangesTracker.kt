@@ -1,6 +1,6 @@
 package com.example.assignment.analysis
 
-import com.example.assignment.storage.ClasspathDigestInMemoryStorage
+import com.example.assignment.storage.inMemory.ClasspathDigestInMemoryStorage
 import com.example.assignment.util.md5
 import java.io.File
 

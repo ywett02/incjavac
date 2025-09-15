@@ -1,7 +1,7 @@
 package com.example.assignment.analysis
 
 import com.example.assignment.entity.FileChanges
-import com.example.assignment.storage.FileDigestInMemoryStorage
+import com.example.assignment.storage.inMemory.FileDigestInMemoryStorage
 import com.example.assignment.util.md5
 import java.io.File
 

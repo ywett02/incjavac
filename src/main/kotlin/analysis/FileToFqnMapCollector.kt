@@ -1,8 +1,8 @@
 package com.example.assignment.analysis
 
 import com.example.assignment.entity.FqName
-import com.example.assignment.storage.FileToFqnMapInMemoryStorage
-import com.example.assignment.storage.FqnToFileMapInMemoryStorage
+import com.example.assignment.storage.inMemory.FileToFqnMapInMemoryStorage
+import com.example.assignment.storage.inMemory.FqnToFileMapInMemoryStorage
 import com.sun.source.util.TaskEvent
 import com.sun.source.util.TaskListener
 import java.io.File

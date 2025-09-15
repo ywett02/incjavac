@@ -1,7 +1,7 @@
 package com.example.assignment.analysis
 
-import com.example.assignment.storage.FileToFqnMapInMemoryStorage
-import com.example.assignment.storage.FqnToFileMapInMemoryStorage
+import com.example.assignment.storage.inMemory.FileToFqnMapInMemoryStorage
+import com.example.assignment.storage.inMemory.FqnToFileMapInMemoryStorage
 import javax.lang.model.util.Elements
 
 class FileToFqnMapCollectorFactory(

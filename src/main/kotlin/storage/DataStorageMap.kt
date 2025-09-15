@@ -8,7 +8,7 @@ import java.io.File
 abstract class DataStorageMap<K, V>(
     private val storageFile: File,
     private val serializer: KSerializer<Map<K, V>>
-) : Closeable {
+) : Storage {
 
     private val inMemoryData = mutableMapOf<K, V>()
     private val removedKeys = mutableSetOf<K>()
@@ -64,7 +64,7 @@ abstract class DataStorageMap<K, V>(
         removedKeys.addAll(storedData.keys)
     }
 
-    override fun close() {
+    override fun flush() {
         val data = storedData + inMemoryData - removedKeys
         getStorageFileOrCreateNew().writeText(Json.encodeToString(serializer, data))
     }

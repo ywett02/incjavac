@@ -4,11 +4,14 @@ import com.example.assignment.analysis.*
 import com.example.assignment.analysis.constant.ConstantDependencyMapCollectorFactory
 import com.example.assignment.entity.ExitCode
 import com.example.assignment.reporter.EventReporter
-import com.example.assignment.resource.*
 import com.example.assignment.resource.impl.AutoCloseableResourceManager
 import com.example.assignment.resource.impl.FileResource
 import com.example.assignment.resource.impl.asResource
-import com.example.assignment.storage.*
+import com.example.assignment.storage.inMemory.ClasspathDigestInMemoryStorage
+import com.example.assignment.storage.inMemory.DependencyGraphInMemoryStorage
+import com.example.assignment.storage.inMemory.FileDigestInMemoryStorage
+import com.example.assignment.storage.inMemory.FileToFqnMapInMemoryStorage
+import com.example.assignment.storage.inMemory.FqnToFileMapInMemoryStorage
 import org.kohsuke.args4j.CmdLineException
 import org.kohsuke.args4j.CmdLineParser
 import org.kohsuke.args4j.Option

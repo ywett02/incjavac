@@ -1,6 +1,7 @@
-package com.example.assignment.storage
+package com.example.assignment.storage.inMemory
 
 import com.example.assignment.entity.serializer.FileAsAbsPathSerializer
+import com.example.assignment.storage.DataStorageMap
 import com.example.assignment.util.mapSerializer
 import kotlinx.serialization.builtins.serializer
 import java.io.File

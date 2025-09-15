@@ -1,7 +1,7 @@
 package com.example.assignment.analysis
 
 import com.example.assignment.IncrementalJavaCompilerContext
-import com.example.assignment.storage.DependencyGraphInMemoryStorage
+import com.example.assignment.storage.inMemory.DependencyGraphInMemoryStorage
 import com.sun.source.util.TaskEvent
 import com.sun.source.util.TaskListener
 import org.objectweb.asm.ClassReader

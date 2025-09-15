@@ -7,7 +7,11 @@ import com.example.assignment.reporter.NoOpReporter
 import com.example.assignment.reporter.TestEventRecorder
 import com.example.assignment.resource.impl.AutoCloseableResourceManager
 import com.example.assignment.resource.impl.asResource
-import com.example.assignment.storage.*
+import com.example.assignment.storage.inMemory.ClasspathDigestInMemoryStorage
+import com.example.assignment.storage.inMemory.DependencyGraphInMemoryStorage
+import com.example.assignment.storage.inMemory.FileDigestInMemoryStorage
+import com.example.assignment.storage.inMemory.FileToFqnMapInMemoryStorage
+import com.example.assignment.storage.inMemory.FqnToFileMapInMemoryStorage
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir

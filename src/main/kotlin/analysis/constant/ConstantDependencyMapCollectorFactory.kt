@@ -1,6 +1,6 @@
 package com.example.assignment.analysis.constant
 
-import com.example.assignment.storage.DependencyGraphInMemoryStorage
+import com.example.assignment.storage.inMemory.DependencyGraphInMemoryStorage
 import com.sun.source.util.JavacTask
 
 

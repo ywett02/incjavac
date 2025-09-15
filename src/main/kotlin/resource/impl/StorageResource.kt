@@ -1,19 +1,18 @@
 package com.example.assignment.resource.impl
 
 import com.example.assignment.resource.CompilationResource
-import java.io.Closeable
+import com.example.assignment.storage.Storage
 
-class CloseableResource(
-    private val closeable: Closeable
+class StorageResource(
+    private val storage: Storage
 ) : CompilationResource {
 
     override fun onSuccess() {
-        closeable.close()
+        storage.flush()
     }
 
     override fun onFailure() {
-        closeable.close()
     }
 }
 
-fun Closeable.asResource(): CloseableResource = CloseableResource(this)
+fun Storage.asResource(): StorageResource = StorageResource(this)

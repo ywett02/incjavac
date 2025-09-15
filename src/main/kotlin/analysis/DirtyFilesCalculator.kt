@@ -3,9 +3,9 @@ package com.example.assignment.analysis
 import com.example.assignment.IncrementalJavaCompilerContext
 import com.example.assignment.entity.DirtyFiles
 import com.example.assignment.entity.FileChanges
-import com.example.assignment.storage.DependencyGraphInMemoryStorage
-import com.example.assignment.storage.FileToFqnMapInMemoryStorage
-import com.example.assignment.storage.FqnToFileMapInMemoryStorage
+import com.example.assignment.storage.inMemory.DependencyGraphInMemoryStorage
+import com.example.assignment.storage.inMemory.FileToFqnMapInMemoryStorage
+import com.example.assignment.storage.inMemory.FqnToFileMapInMemoryStorage
 import java.io.File
 
 class DirtyFilesCalculator(
