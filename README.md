@@ -29,6 +29,7 @@ is an **educational proof of concept**, not a production-ready compiler.
 - **No distinction between ABI and non-ABI changes** - both types of source changes currently trigger recompilation
 - **Java constants not tracked** – class dependencies are not propagated when constants are used, which can cause missed
   relationships
+- **Transitive dependencies not tracked** – inheritance chains are not fully analyzed, which can also result in missed relationships
 
 ## Usage
 
