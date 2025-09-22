@@ -2,6 +2,7 @@ package com.example.assignment.analysis
 
 import com.example.assignment.entity.FqName
 import com.example.assignment.storage.FileToFqnMapInMemoryStorage
+import com.example.assignment.storage.FqnToFileMapInMemoryStorage
 import com.sun.source.util.TaskEvent
 import com.sun.source.util.TaskListener
 import java.io.File
@@ -10,7 +11,8 @@ import javax.tools.JavaFileObject
 
 class FileToFqnMapCollector(
     private val elements: Elements,
-    private val fqnMapInMemoryStorage: FileToFqnMapInMemoryStorage
+    private val fqnMapInMemoryStorage: FileToFqnMapInMemoryStorage,
+    private val fileMapInMemoryStorage: FqnToFileMapInMemoryStorage,
 ) : TaskListener {
 
     private val fileToFqnMap: MutableMap<File, MutableSet<FqName>> = mutableMapOf()
@@ -32,7 +34,12 @@ class FileToFqnMapCollector(
             return
         }
 
-        fqnMapInMemoryStorage.addAll(fileToFqnMap)
-        fileToFqnMap.clear()
+        for ((file, fqNames) in fileToFqnMap) {
+            fqnMapInMemoryStorage.append(file, fqNames)
+
+            for (fqName in fqNames) {
+                fileMapInMemoryStorage.put(fqName, file)
+            }
+        }
     }
 }

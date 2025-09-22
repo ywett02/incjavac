@@ -1,35 +1,50 @@
 package com.example.assignment.analysis
 
+import com.example.assignment.IncrementalJavaCompilerContext
+import com.example.assignment.entity.DirtyFiles
 import com.example.assignment.entity.FileChanges
-import com.example.assignment.entity.FqName
-import com.example.assignment.storage.DependencyMapInMemoryStorage
+import com.example.assignment.storage.DependencyGraphInMemoryStorage
 import com.example.assignment.storage.FileToFqnMapInMemoryStorage
-import com.example.assignment.util.inverted
+import com.example.assignment.storage.FqnToFileMapInMemoryStorage
 import java.io.File
 
 class DirtyFilesCalculator(
     private val fileToFqnMapInMemoryStorage: FileToFqnMapInMemoryStorage,
-    private val dependencyMapInMemoryStorage: DependencyMapInMemoryStorage
+    private val fqnToFileMapInMemoryStorage: FqnToFileMapInMemoryStorage,
+    private val dependencyGraphInMemoryStorage: DependencyGraphInMemoryStorage
 ) {
-    fun calculateDirtyFiles(changes: FileChanges): Set<File> {
-        val fileToFqnMap: Map<File, Set<FqName>> = fileToFqnMapInMemoryStorage.get()
-        val invertedDependencyMap: Map<FqName, Set<FqName>> = dependencyMapInMemoryStorage.get().inverted()
-        val fqnToFileMap: Map<FqName, Set<File>> = fileToFqnMap.inverted()
+    fun calculateDirtyFiles(
+        changes: FileChanges,
+        incrementalJavaCompilerContext: IncrementalJavaCompilerContext
+    ): DirtyFiles {
+        val dirtySourceFiles = mutableSetOf<File>().apply {
+            addAll(changes.addedAndModifiedFiles)
+            addAll(getDependencies(changes.addedAndModifiedFiles + changes.removedFiles))
 
-        val sourceFiles = changes.addedAndModifiedFiles + changes.removedFiles
-        return sourceFiles
-            .asSequence()
-            .flatMap { sourceFile: File ->
-                fileToFqnMap.getOrDefault(sourceFile, emptySet())
-            }
-            .flatMap { classFqnName ->
-                invertedDependencyMap.getOrDefault(classFqnName, emptySet())
-            }
-            .flatMap { dependencyFqnName ->
-                fqnToFileMap.getOrDefault(dependencyFqnName, emptySet())
-            }
-            .plus(changes.addedAndModifiedFiles)
-            .minus(changes.removedFiles)
-            .toSet()
+            removeAll(changes.removedFiles)
+        }
+
+        val dirtyClassFiles = (dirtySourceFiles + changes.removedFiles)
+            .flatMap { file ->
+                fileToFqnMapInMemoryStorage.getAndRemove(file) ?: emptySet()
+            }.map { fqn ->
+                val relativePath = fqn.id.split(".").joinToString(File.separator)
+                incrementalJavaCompilerContext.outputDir.resolve("$relativePath.class").absoluteFile
+            }.toSet()
+
+        return DirtyFiles(
+            dirtySourceFiles = dirtySourceFiles,
+            dirtyClassFiles = dirtyClassFiles
+        )
     }
+
+    private fun getDependencies(dirtySourceFiles: Set<File>): Set<File> =
+        dirtySourceFiles
+            .flatMap { file ->
+                fileToFqnMapInMemoryStorage.get(file) ?: emptySet()
+            }.flatMap { fqn ->
+                dependencyGraphInMemoryStorage.getNodeAndRemove(fqn)?.parents?.map { it.value } ?: emptySet()
+            }.mapNotNull { fqn ->
+                fqnToFileMapInMemoryStorage.getAndRemove(fqn)
+            }.toSet()
 }

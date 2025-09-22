@@ -1,34 +1,38 @@
 package com.example.assignment
 
 import com.example.assignment.analysis.*
+import com.example.assignment.analysis.constant.ConstantDependencyMapCollectorFactory
 import com.example.assignment.entity.CompilationResult
 import com.example.assignment.entity.ExitCode
 import com.example.assignment.entity.ExitCode.COMPILATION_ERROR
 import com.example.assignment.entity.ExitCode.OK
 import com.example.assignment.entity.FileChanges
+import com.example.assignment.reporter.EventReporter
 import com.sun.source.util.JavacTask
 import java.io.File
+import java.nio.file.Files
+import java.nio.file.StandardCopyOption
 
 class IncrementalJavaCompilerRunner(
-    private val fileChangesCalculator: FileChangesCalculator,
-    private val classpathChangeCalculator: ClasspathChangeCalculator,
+    private val fileChangesTracker: FileChangesTracker,
+    private val classpathChangesTracker: ClasspathChangesTracker,
     private val dirtyFilesCalculator: DirtyFilesCalculator,
     private val dependencyMapCollectorFactory: DependencyMapCollectorFactory,
     private val fileToFqnMapCollectorFactory: FileToFqnMapCollectorFactory,
-    private val staleOutputCleaner: StaleOutputCleaner,
+    private val constantDependencyMapCollectorFactory: ConstantDependencyMapCollectorFactory,
     private val eventReporter: EventReporter
 ) {
 
     fun compile(incrementalJavaCompilerContext: IncrementalJavaCompilerContext): ExitCode {
         try {
-            val fileChanges = fileChangesCalculator.calculateFileChanges(incrementalJavaCompilerContext.sourceFiles)
+            val fileChanges = fileChangesTracker.trackFileChanges(incrementalJavaCompilerContext.sourceFiles)
             eventReporter.reportEvent(
                 """Added or modified files: [${fileChanges.addedAndModifiedFiles.joinToString()}]
                 |Removed files: [${fileChanges.removedFiles.joinToString()}]
             """.trimMargin()
             )
             val hasClasspathChanged =
-                classpathChangeCalculator.hasClasspathChanged(incrementalJavaCompilerContext.classpath)
+                classpathChangesTracker.hasClasspathChanged(incrementalJavaCompilerContext.classpath)
 
             val exitCode =
                 when (val compilationResult =
@@ -55,6 +59,7 @@ class IncrementalJavaCompilerRunner(
                     }
                 }
 
+            incrementalJavaCompilerContext.onCompilationCompleted(exitCode)
             return exitCode
         } catch (e: Throwable) {
             eventReporter.reportEvent("Compilation failed due to internal error: ${e.message}")
@@ -68,32 +73,57 @@ class IncrementalJavaCompilerRunner(
         incrementalJavaCompilerContext: IncrementalJavaCompilerContext
     ): CompilationResult {
         try {
-            if (!incrementalJavaCompilerContext.metadataDir.exists()) {
-                return CompilationResult.RequiresRecompilation("Required metadata doest not exist")
+            if (!incrementalJavaCompilerContext.outputDir.exists()) {
+                return CompilationResult.RequiresRecompilation("Previous output doest not exist")
             }
 
             if (hasClasspathChanged) {
                 return CompilationResult.RequiresRecompilation("Classpath has changed")
             }
 
-            val dirtyFiles = dirtyFilesCalculator.calculateDirtyFiles(fileChanges)
-            eventReporter.reportEvent(
-                "Dirty files: [${dirtyFiles.joinToString()}]"
-            )
+            val dirtyFiles = dirtyFilesCalculator.calculateDirtyFiles(fileChanges, incrementalJavaCompilerContext)
+            eventReporter.run {
+                reportEvent("Dirty source files: [${dirtyFiles.dirtySourceFiles.joinToString()}]")
+                reportEvent("Dirty class files: [${dirtyFiles.dirtyClassFiles.joinToString()}]")
+            }
 
-            staleOutputCleaner.cleanStaleOutput(fileChanges.removedFiles, incrementalJavaCompilerContext)
+            backupClassFiles(dirtyFiles.dirtyClassFiles, incrementalJavaCompilerContext)
 
-            if (dirtyFiles.isEmpty()) {
+            if (dirtyFiles.dirtySourceFiles.isEmpty()) {
                 return CompilationResult.Success(OK)
             }
 
-            return CompilationResult.Success(runCompilation(dirtyFiles, incrementalJavaCompilerContext))
+            return CompilationResult.Success(
+                runCompilation(
+                    dirtyFiles.dirtySourceFiles,
+                    incrementalJavaCompilerContext
+                )
+            )
         } catch (e: Throwable) {
             eventReporter.reportEvent(
-                "Compilation failed due to internal error: ${e.message}"
+                "Compilation failed due to internal error: ${e.localizedMessage}"
             )
 
             return CompilationResult.Error(e)
+        }
+    }
+
+    private fun backupClassFiles(
+        classFiles: Set<File>,
+        incrementalJavaCompilerContext: IncrementalJavaCompilerContext
+    ) {
+        classFiles.forEach { file ->
+            val relativePath = file.relativeTo(incrementalJavaCompilerContext.outputDir)
+            val backupFile =
+                incrementalJavaCompilerContext.outputDirBackup.resolve(relativePath.path).also { file ->
+                    file.parentFile?.mkdirs()
+                }
+
+            Files.move(
+                file.toPath(),
+                backupFile.toPath(),
+                StandardCopyOption.REPLACE_EXISTING
+            )
         }
     }
 
@@ -121,6 +151,7 @@ class IncrementalJavaCompilerRunner(
                 incrementalJavaCompilerContext
             )
         )
+        javacTask.addTaskListener(constantDependencyMapCollectorFactory.create(javacTask))
 
         eventReporter.reportEvent(
             "javac running with arguments: [${compilationOptions.joinToString(separator = " ")} ${

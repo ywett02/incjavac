@@ -1,11 +1,11 @@
 package com.example.assignment.analysis
 
 import com.example.assignment.IncrementalJavaCompilerContext
-import com.example.assignment.storage.DependencyMapInMemoryStorage
+import com.example.assignment.storage.DependencyGraphInMemoryStorage
 import javax.lang.model.util.Elements
 
 class DependencyMapCollectorFactory(
-    private val fqnMapInMemoryStorage: DependencyMapInMemoryStorage
+    private val fqnMapInMemoryStorage: DependencyGraphInMemoryStorage
 ) {
 
     fun create(

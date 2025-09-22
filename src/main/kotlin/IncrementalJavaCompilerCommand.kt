@@ -1,16 +1,17 @@
 package com.example.assignment
 
 import com.example.assignment.analysis.*
+import com.example.assignment.analysis.constant.ConstantDependencyMapCollectorFactory
 import com.example.assignment.entity.ExitCode
-import com.example.assignment.storage.ClasspathDigestInMemoryStorage
-import com.example.assignment.storage.DependencyMapInMemoryStorage
-import com.example.assignment.storage.FileDigestInMemoryStorage
-import com.example.assignment.storage.FileToFqnMapInMemoryStorage
+import com.example.assignment.reporter.EventReporter
+import com.example.assignment.storage.*
 import org.kohsuke.args4j.CmdLineException
 import org.kohsuke.args4j.CmdLineParser
 import org.kohsuke.args4j.Option
 import org.kohsuke.args4j.spi.FileOptionHandler
 import java.io.File
+import java.nio.file.Files
+import java.nio.file.StandardCopyOption
 import javax.tools.ToolProvider
 
 class IncrementalJavaCompilerCommand private constructor() {
@@ -65,62 +66,98 @@ class IncrementalJavaCompilerCommand private constructor() {
     val debug: Boolean
         get() = _debug
 
+    private val metadataDir: File
+        get() = cacheDir.resolve(DEFAULT_METADATA_DIR_NAME)
+
+    private val directoryBackup: File
+        get() = cacheDir.resolve(DEFAULT_BACKUP_DIR_NAME)
+
     companion object {
         private const val DEFAULT_BUILD_DIR_NAME = "build"
         private const val DEFAULT_CACHE_DIR_NAME = "cache"
         private const val DEFAULT_DIRECTORY_DIR_NAME = "classes"
         private const val DEFAULT_METADATA_DIR_NAME = "metadata"
+        private const val DEFAULT_BACKUP_DIR_NAME = "backup"
 
         fun run(args: Array<String>): ExitCode {
             val incrementalJavaCompilerCommand = createCommand(args)
             val eventReporter = EventReporter(incrementalJavaCompilerCommand.debug)
             eventReporter.reportEvent("incJavac running with arguments: [${args.joinToString(separator = " ")}]")
 
-            val incrementalJavaCompilerContext = IncrementalJavaCompilerContext(
-                src = incrementalJavaCompilerCommand.src,
-                outputDir = incrementalJavaCompilerCommand.cacheDir.resolve(DEFAULT_DIRECTORY_DIR_NAME),
-                metadataDir = incrementalJavaCompilerCommand.cacheDir.resolve(DEFAULT_METADATA_DIR_NAME),
-                classpath = incrementalJavaCompilerCommand.classpath,
-                javaCompiler = ToolProvider.getSystemJavaCompiler()
-            )
-
-            val fileDigestInMemoryStorage = FileDigestInMemoryStorage.create(incrementalJavaCompilerContext.metadataDir)
+            val fileDigestInMemoryStorage = FileDigestInMemoryStorage.create(incrementalJavaCompilerCommand.metadataDir)
             val classpathDigestInMemoryStorage =
-                ClasspathDigestInMemoryStorage.create(incrementalJavaCompilerContext.metadataDir)
+                ClasspathDigestInMemoryStorage.create(incrementalJavaCompilerCommand.metadataDir)
             val fileToFqnMapInMemoryStorage =
-                FileToFqnMapInMemoryStorage.create(incrementalJavaCompilerContext.metadataDir)
-            val dependencyMapInMemoryStorage =
-                DependencyMapInMemoryStorage.create(incrementalJavaCompilerContext.metadataDir)
+                FileToFqnMapInMemoryStorage.create(incrementalJavaCompilerCommand.metadataDir)
+            val fqnToFileMapInMemoryStorage =
+                FqnToFileMapInMemoryStorage.create(incrementalJavaCompilerCommand.metadataDir)
+            val dependencyGraphInMemoryStorage =
+                DependencyGraphInMemoryStorage.create(incrementalJavaCompilerCommand.metadataDir)
+
+            val incrementalJavaCompilerContext = IncrementalJavaCompilerContext(
+                src = incrementalJavaCompilerCommand.src.absoluteFile,
+                outputDir = incrementalJavaCompilerCommand.directory.absoluteFile,
+                outputDirBackup = incrementalJavaCompilerCommand.directoryBackup.absoluteFile,
+                classpath = incrementalJavaCompilerCommand.classpath,
+                javaCompiler = ToolProvider.getSystemJavaCompiler(),
+                //TODO you should do something about this
+                onCompilationCompleted = { exitCode ->
+                    when (exitCode) {
+                        ExitCode.OK -> {
+                            fileDigestInMemoryStorage.close()
+                            classpathDigestInMemoryStorage.close()
+                            fileToFqnMapInMemoryStorage.close()
+                            fqnToFileMapInMemoryStorage.close()
+                            dependencyGraphInMemoryStorage.close()
+                            if (incrementalJavaCompilerCommand.directoryBackup.exists()) {
+                                incrementalJavaCompilerCommand.directoryBackup.deleteRecursively()
+                            }
+                        }
+
+                        ExitCode.INTERNAL_ERROR, ExitCode.COMPILATION_ERROR -> {
+                            if (incrementalJavaCompilerCommand.directoryBackup.exists()) {
+                                revertClassFiles(incrementalJavaCompilerCommand)
+                                incrementalJavaCompilerCommand.directoryBackup.deleteRecursively()
+                            }
+                        }
+                    }
+                }
+            )
 
             val incrementalJavaCompilerRunner =
                 IncrementalJavaCompilerRunner(
-                    FileChangesCalculator(fileDigestInMemoryStorage),
-                    ClasspathChangeCalculator(classpathDigestInMemoryStorage),
-                    DirtyFilesCalculator(fileToFqnMapInMemoryStorage, dependencyMapInMemoryStorage),
-                    DependencyMapCollectorFactory(dependencyMapInMemoryStorage),
-                    FileToFqnMapCollectorFactory(fileToFqnMapInMemoryStorage),
-                    StaleOutputCleaner(fileToFqnMapInMemoryStorage, dependencyMapInMemoryStorage),
+                    FileChangesTracker(fileDigestInMemoryStorage),
+                    ClasspathChangesTracker(classpathDigestInMemoryStorage),
+                    DirtyFilesCalculator(
+                        fileToFqnMapInMemoryStorage,
+                        fqnToFileMapInMemoryStorage,
+                        dependencyGraphInMemoryStorage
+                    ),
+                    DependencyMapCollectorFactory(dependencyGraphInMemoryStorage),
+                    FileToFqnMapCollectorFactory(fileToFqnMapInMemoryStorage, fqnToFileMapInMemoryStorage),
+                    ConstantDependencyMapCollectorFactory(dependencyGraphInMemoryStorage),
                     eventReporter
                 )
 
-            val exitCode = incrementalJavaCompilerRunner.compile(incrementalJavaCompilerContext)
+            return incrementalJavaCompilerRunner.compile(incrementalJavaCompilerContext)
+        }
 
-            if (exitCode == ExitCode.OK) {
-                fileDigestInMemoryStorage.close()
-                classpathDigestInMemoryStorage.close()
-                fileToFqnMapInMemoryStorage.close()
-                dependencyMapInMemoryStorage.close()
+        //TODO this won't be testable
+        private fun revertClassFiles(incrementalJavaCompilerCommand: IncrementalJavaCompilerCommand) {
+            incrementalJavaCompilerCommand.directoryBackup.walk()
+                .filter { it.isFile }
+                .forEach { backupFile ->
+                    val relativePath =
+                        backupFile.relativeTo(incrementalJavaCompilerCommand.directoryBackup)
+                    val targetFile =
+                        incrementalJavaCompilerCommand.directory.resolve(relativePath.path)
 
-                incrementalJavaCompilerCommand.directory.deleteRecursively()
-                incrementalJavaCompilerContext.outputDir.copyRecursively(incrementalJavaCompilerCommand.directory)
-            } else {
-                incrementalJavaCompilerContext.outputDir.deleteRecursively()
-                if (incrementalJavaCompilerCommand.directory.exists()) {
-                    incrementalJavaCompilerCommand.directory.copyRecursively(incrementalJavaCompilerContext.outputDir)
+                    Files.move(
+                        backupFile.toPath(),
+                        targetFile.toPath(),
+                        StandardCopyOption.REPLACE_EXISTING
+                    )
                 }
-            }
-
-            return exitCode
         }
 
         private fun createCommand(args: Array<String>): IncrementalJavaCompilerCommand {

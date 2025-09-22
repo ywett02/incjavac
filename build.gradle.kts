@@ -16,6 +16,7 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.8.1")
     implementation("org.ow2.asm:asm:9.8")
     testImplementation(kotlin("test"))
+    testImplementation("org.mockito.kotlin:mockito-kotlin:5.2.1")
 }
 
 tasks.test {
