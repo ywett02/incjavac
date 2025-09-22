@@ -1,0 +1,29 @@
+{
+  "com.example.test.TestClass": [
+    "com.example.test.ConstantOwner",
+    "java.lang.String",
+    "java.io.PrintStream",
+    "com.example.test.IndependentClass",
+    "java.lang.System",
+    "com.example.test.AbstractClassImpInterface",
+    "java.lang.Object",
+    "com.example.test.InterfaceClass"
+  ],
+  "com.example.test.ConstantOwner": [
+    "java.lang.Object",
+    "java.lang.String"
+  ],
+  "com.example.test.IndependentClass": [
+    "java.io.PrintStream",
+    "java.lang.String",
+    "java.lang.Object",
+    "java.lang.System"
+  ],
+  "com.example.test.AbstractClassImpInterface": [
+    "java.lang.Object",
+    "com.example.test.InterfaceClass"
+  ],
+  "com.example.test.InterfaceClass": [
+    "java.lang.Object"
+  ]
+}

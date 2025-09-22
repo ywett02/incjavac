@@ -1,0 +1,17 @@
+{
+  "/Users/ivet/Documents/incjavac/example/basic/src/com/example/test/TestClass.java": [
+    "com.example.test.TestClass"
+  ],
+  "/Users/ivet/Documents/incjavac/example/basic/src/com/example/test/AbstractClassImpInterface.java": [
+    "com.example.test.AbstractClassImpInterface"
+  ],
+  "/Users/ivet/Documents/incjavac/example/basic/src/com/example/test/InterfaceClass.java": [
+    "com.example.test.InterfaceClass"
+  ],
+  "/Users/ivet/Documents/incjavac/example/basic/src/com/example/test/IndependentClass.java": [
+    "com.example.test.IndependentClass"
+  ],
+  "/Users/ivet/Documents/incjavac/example/basic/src/com/example/test/ConstantOwner.java": [
+    "com.example.test.ConstantOwner"
+  ]
+}
