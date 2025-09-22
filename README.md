@@ -18,7 +18,7 @@ is an **educational proof of concept**, not a production-ready compiler.
     - Builds dependency maps and stores compilation metadata
 - **Subsequent Runs**
     - Detects changed files using file digests (MD5 hashes)
-    - Builds a "dirty set" including changed files and their dependencies
+  - Builds a "dirty set" including changed sources files with their direct and transitive superclass dependencies
     - Recompiles only the dirty set, leaving unchanged files untouched
     - Updates dependency maps and metadata for next compilation
 
@@ -27,8 +27,6 @@ is an **educational proof of concept**, not a production-ready compiler.
 - **No incremental support for library (classpath) changes** - any modification to the classpath results in a full
   recompilation
 - **No distinction between ABI and non-ABI changes** - both types of source changes currently trigger recompilation
-- **Java constants not tracked** – class dependencies are not propagated when constants are used, which can cause missed
-  relationships
 
 ## Usage
 

@@ -35,7 +35,6 @@ import org.objectweb.asm.signature.SignatureReader;
 import org.objectweb.asm.signature.SignatureVisitor;
 
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -46,13 +45,13 @@ import java.util.Set;
  */
 public class DependencyVisitor extends ClassVisitor {
 
-    Map<FqName, Set<FqName>> groups = new HashMap<FqName, Set<FqName>>();
+    Map<FqName, DependencyAnalysis> data = new HashMap<>();
 
-    FqName currentKey;
-    Set<FqName> currentValue;
+    FqName className;
+    DependencyAnalysis analysis;
 
-    public Map<FqName, Set<FqName>> getGlobals() {
-        return groups;
+    public Map<FqName, DependencyAnalysis> getAnalysis() {
+        return data;
     }
 
     public DependencyVisitor() {
@@ -69,14 +68,14 @@ public class DependencyVisitor extends ClassVisitor {
             final String signature,
             final String superName,
             final String[] interfaces) {
-        currentKey = binaryName(name);
-        currentValue = groups.computeIfAbsent(currentKey, k -> new HashSet<>());
+        className = binaryName(name);
+        analysis = data.computeIfAbsent(className, k -> new DependencyAnalysis());
 
         if (signature == null) {
             if (superName != null) {
-                addInternalName(superName);
+                addInternalName(superName, analysis.superTypes);
             }
-            addInternalNames(interfaces);
+            addInternalNames(interfaces, analysis.superTypes);
         } else {
             addSignature(signature);
         }
@@ -86,7 +85,7 @@ public class DependencyVisitor extends ClassVisitor {
     public AnnotationVisitor visitAnnotation(
             final String desc,
             final boolean visible) {
-        addDesc(desc);
+        addDesc(desc, analysis.types);
         return new AnnotationDependencyVisitor();
     }
 
@@ -98,12 +97,12 @@ public class DependencyVisitor extends ClassVisitor {
             final String signature,
             final Object value) {
         if (signature == null) {
-            addDesc(desc);
+            addDesc(desc, analysis.types);
         } else {
             addTypeSignature(signature);
         }
         if (value instanceof Type) {
-            addType((Type) value);
+            addType((Type) value, analysis.types);
         }
         return new FieldDependencyVisitor();
     }
@@ -116,12 +115,89 @@ public class DependencyVisitor extends ClassVisitor {
             final String signature,
             final String[] exceptions) {
         if (signature == null) {
-            addMethodDesc(desc);
+            addMethodDesc(desc, analysis.types);
         } else {
             addSignature(signature);
         }
-        addInternalNames(exceptions);
+        addInternalNames(exceptions, analysis.types);
         return new MethodDependencyVisitor();
+    }
+
+    private void addName(final String name, Set<FqName> collection) {
+        if (name == null) {
+            return;
+        }
+
+        FqName binaryName = binaryName(name);
+        if (className.getId().equals(binaryName.getId())) {
+            return;
+        }
+
+        collection.add(binaryName);
+    }
+
+    void addInternalName(final String name, Set<FqName> collection) {
+        addType(Type.getObjectType(name), collection);
+    }
+
+    private void addInternalNames(final String[] names, Set<FqName> collection) {
+        for (int i = 0; names != null && i < names.length; i++) {
+            addInternalName(names[i], collection);
+        }
+    }
+
+    void addDesc(final String desc, Set<FqName> collection) {
+        addType(Type.getType(desc), collection);
+    }
+
+    // ---------------------------------------------
+
+    void addMethodDesc(final String desc, Set<FqName> collection) {
+        addType(Type.getReturnType(desc), collection);
+        Type[] types = Type.getArgumentTypes(desc);
+        for (int i = 0; i < types.length; i++) {
+            addType(types[i], collection);
+        }
+    }
+
+    private FqName binaryName(String name) {
+        return new FqName(name.replaceAll("[/]", "."));
+    }
+
+    void addType(final Type t, Set<FqName> collection) {
+        switch (t.getSort()) {
+            case Type.ARRAY:
+                addType(t.getElementType(), collection);
+                break;
+            case Type.OBJECT:
+                addName(t.getInternalName(), collection);
+                break;
+            case Type.METHOD:
+                addMethodDesc(t.getDescriptor(), collection);
+                break;
+        }
+    }
+
+    void addConstant(final Object cst, Set<FqName> collection) {
+        if (cst instanceof Type) {
+            addType((Type) cst, collection);
+        } else if (cst instanceof Handle) {
+            Handle h = (Handle) cst;
+            addInternalName(h.getOwner(), collection);
+            addMethodDesc(h.getDesc(), collection);
+        }
+    }
+
+    private void addSignature(final String signature) {
+        if (signature != null) {
+            new SignatureReader(signature).accept(new SignatureDependencyVisitor());
+        }
+    }
+
+    void addTypeSignature(final String signature) {
+        if (signature != null) {
+            new SignatureReader(signature).acceptType(new SignatureDependencyVisitor());
+        }
     }
 
     class AnnotationDependencyVisitor extends AnnotationVisitor {
@@ -133,7 +209,7 @@ public class DependencyVisitor extends ClassVisitor {
         @Override
         public void visit(final String name, final Object value) {
             if (value instanceof Type) {
-                addType((Type) value);
+                addType((Type) value, analysis.types);
             }
         }
 
@@ -142,14 +218,14 @@ public class DependencyVisitor extends ClassVisitor {
                 final String name,
                 final String desc,
                 final String value) {
-            addDesc(desc);
+            addDesc(desc, analysis.types);
         }
 
         @Override
         public AnnotationVisitor visitAnnotation(
                 final String name,
                 final String desc) {
-            addDesc(desc);
+            addDesc(desc, analysis.types);
             return this;
         }
 
@@ -167,22 +243,9 @@ public class DependencyVisitor extends ClassVisitor {
 
         @Override
         public AnnotationVisitor visitAnnotation(String desc, boolean visible) {
-            addDesc(desc);
+            addDesc(desc, analysis.types);
             return new AnnotationDependencyVisitor();
         }
-    }
-
-    private void addName(final String name) {
-        if (name == null) {
-            return;
-        }
-
-        FqName binaryName = binaryName(name);
-        if (currentKey.getId().equals(binaryName.getId())) {
-            return;
-        }
-
-        currentValue.add(binaryName);
     }
 
     class SignatureDependencyVisitor extends SignatureVisitor {
@@ -196,17 +259,15 @@ public class DependencyVisitor extends ClassVisitor {
         @Override
         public void visitClassType(final String name) {
             signatureClassName = name;
-            addInternalName(name);
+            addInternalName(name, analysis.types);
         }
 
         @Override
         public void visitInnerClassType(final String name) {
             signatureClassName = signatureClassName + "$" + name;
-            addInternalName(signatureClassName);
+            addInternalName(signatureClassName, analysis.types);
         }
     }
-
-    // ---------------------------------------------
 
     class MethodDependencyVisitor extends MethodVisitor {
 
@@ -223,7 +284,7 @@ public class DependencyVisitor extends ClassVisitor {
         public AnnotationVisitor visitAnnotation(
                 final String desc,
                 final boolean visible) {
-            addDesc(desc);
+            addDesc(desc, analysis.types);
             return new AnnotationDependencyVisitor();
         }
 
@@ -232,13 +293,13 @@ public class DependencyVisitor extends ClassVisitor {
                 final int parameter,
                 final String desc,
                 final boolean visible) {
-            addDesc(desc);
+            addDesc(desc, analysis.types);
             return new AnnotationDependencyVisitor();
         }
 
         @Override
         public void visitTypeInsn(final int opcode, final String type) {
-            addType(Type.getObjectType(type));
+            addType(Type.getObjectType(type), analysis.types);
         }
 
         @Override
@@ -247,8 +308,8 @@ public class DependencyVisitor extends ClassVisitor {
                 final String owner,
                 final String name,
                 final String desc) {
-            addInternalName(owner);
-            addDesc(desc);
+            addInternalName(owner, analysis.types);
+            addDesc(desc, analysis.types);
         }
 
         @Override
@@ -258,8 +319,8 @@ public class DependencyVisitor extends ClassVisitor {
                 final String name,
                 final String desc,
                 final boolean isInterface) {
-            addInternalName(owner);
-            addMethodDesc(desc);
+            addInternalName(owner, analysis.types);
+            addMethodDesc(desc, analysis.types);
         }
 
         @Override
@@ -268,21 +329,21 @@ public class DependencyVisitor extends ClassVisitor {
                 String desc,
                 Handle bsm,
                 Object... bsmArgs) {
-            addMethodDesc(desc);
-            addConstant(bsm);
+            addMethodDesc(desc, analysis.types);
+            addConstant(bsm, analysis.types);
             for (int i = 0; i < bsmArgs.length; i++) {
-                addConstant(bsmArgs[i]);
+                addConstant(bsmArgs[i], analysis.types);
             }
         }
 
         @Override
         public void visitLdcInsn(final Object cst) {
-            addConstant(cst);
+            addConstant(cst, analysis.types);
         }
 
         @Override
         public void visitMultiANewArrayInsn(final String desc, final int dims) {
-            addDesc(desc);
+            addDesc(desc, analysis.types);
         }
 
         @Override
@@ -303,70 +364,8 @@ public class DependencyVisitor extends ClassVisitor {
                 final Label handler,
                 final String type) {
             if (type != null) {
-                addInternalName(type);
+                addInternalName(type, analysis.types);
             }
-        }
-    }
-
-    private FqName binaryName(String name) {
-        return new FqName(name.replaceAll("[/]", "."));
-    }
-
-    void addInternalName(final String name) {
-        addType(Type.getObjectType(name));
-    }
-
-    private void addInternalNames(final String[] names) {
-        for (int i = 0; names != null && i < names.length; i++) {
-            addInternalName(names[i]);
-        }
-    }
-
-    void addDesc(final String desc) {
-        addType(Type.getType(desc));
-    }
-
-    void addMethodDesc(final String desc) {
-        addType(Type.getReturnType(desc));
-        Type[] types = Type.getArgumentTypes(desc);
-        for (int i = 0; i < types.length; i++) {
-            addType(types[i]);
-        }
-    }
-
-    void addType(final Type t) {
-        switch (t.getSort()) {
-            case Type.ARRAY:
-                addType(t.getElementType());
-                break;
-            case Type.OBJECT:
-                addName(t.getInternalName());
-                break;
-            case Type.METHOD:
-                addMethodDesc(t.getDescriptor());
-                break;
-        }
-    }
-
-    private void addSignature(final String signature) {
-        if (signature != null) {
-            new SignatureReader(signature).accept(new SignatureDependencyVisitor());
-        }
-    }
-
-    void addTypeSignature(final String signature) {
-        if (signature != null) {
-            new SignatureReader(signature).acceptType(new SignatureDependencyVisitor());
-        }
-    }
-
-    void addConstant(final Object cst) {
-        if (cst instanceof Type) {
-            addType((Type) cst);
-        } else if (cst instanceof Handle) {
-            Handle h = (Handle) cst;
-            addInternalName(h.getOwner());
-            addMethodDesc(h.getDesc());
         }
     }
 }
