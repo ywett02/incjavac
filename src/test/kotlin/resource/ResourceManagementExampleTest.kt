@@ -6,9 +6,6 @@ import com.example.assignment.resource.impl.AutoCloseableResourceManager
 import com.example.assignment.resource.impl.asResource
 import com.example.assignment.storage.Storage
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.io.TempDir
-import java.io.Closeable
-import java.io.File
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
@@ -16,10 +13,10 @@ import kotlin.test.assertTrue
 class ResourceManagementExampleTest {
 
     @Test
-    fun `when resources are registered and compilation succeeds, then all resources are cleaned up correctly`(@TempDir tempDir: File) {
+    fun `when resources are registered and compilation succeeds, then all resources are cleaned up correctly`() {
         val resourceManager = AutoCloseableResourceManager(NoOpReporter)
-        val mockStorage = MockStorage("storage1")
-        val mockBackup = MockBackupResource(tempDir)
+        val mockStorage = MockStorage()
+        val mockBackup = MockBackupResource()
         val mockCustomResource = MockCustomResource()
         resourceManager.registerResource(mockStorage.asResource())
         resourceManager.registerResource(mockBackup)
@@ -27,7 +24,7 @@ class ResourceManagementExampleTest {
 
         resourceManager.cleanup(ExitCode.OK)
 
-        assertTrue(mockStorage.closed)
+        assertTrue(mockStorage.flushed)
         assertTrue(mockBackup.successCalled)
         assertFalse(mockBackup.failureCalled)
         assertTrue(mockCustomResource.successCalled)
@@ -35,10 +32,10 @@ class ResourceManagementExampleTest {
     }
 
     @Test
-    fun `when resources are registered and compilation fails, then failure cleanup is performed`(@TempDir tempDir: File) {
+    fun `when resources are registered and compilation fails, then nothing is flushed`() {
         val resourceManager = AutoCloseableResourceManager(NoOpReporter)
-        val mockStorage = MockStorage("storage2")
-        val mockBackup = MockBackupResource(tempDir)
+        val mockStorage = MockStorage()
+        val mockBackup = MockBackupResource()
         val mockCustomResource = MockCustomResource()
         resourceManager.registerResource(mockStorage.asResource())
         resourceManager.registerResource(mockBackup)
@@ -46,34 +43,31 @@ class ResourceManagementExampleTest {
 
         resourceManager.cleanup(ExitCode.COMPILATION_ERROR)
 
-        assertTrue(mockStorage.closed)
+        assertFalse(mockStorage.flushed)
         assertFalse(mockBackup.successCalled)
         assertTrue(mockBackup.failureCalled)
         assertFalse(mockCustomResource.successCalled)
         assertTrue(mockCustomResource.failureCalled)
     }
 
-    private class MockStorage(private val name: String) : Storage {
-        var closed = false
+    private class MockStorage() : Storage {
+        var flushed = false
 
         override fun flush() {
-            closed = true
-            println("MockStorage $name closed")
+            flushed = true
         }
     }
 
-    private class MockBackupResource(private val tempDir: File) : CompilationResource {
+    private class MockBackupResource() : CompilationResource {
         var successCalled = false
         var failureCalled = false
         
         override fun onSuccess() {
             successCalled = true
-            println("MockBackupResource: Success cleanup")
         }
         
         override fun onFailure() {
             failureCalled = true
-            println("MockBackupResource: Failure cleanup - would restore files")
         }
     }
 
@@ -83,12 +77,10 @@ class ResourceManagementExampleTest {
         
         override fun onSuccess() {
             successCalled = true
-            println("MockCustomResource: Success cleanup - updating cache")
         }
         
         override fun onFailure() {
             failureCalled = true
-            println("MockCustomResource: Failure cleanup - rolling back changes")
         }
     }
 }

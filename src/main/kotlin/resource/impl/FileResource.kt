@@ -30,7 +30,6 @@ class FileResource(
                 val relativePath = backupFile.relativeTo(backupDir)
                 val targetFile = outputDir.resolve(relativePath.path)
 
-                // Ensure target directory exists
                 targetFile.parentFile?.mkdirs()
 
                 Files.move(
