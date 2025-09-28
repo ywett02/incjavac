@@ -2,7 +2,7 @@ package com.example.javac.incremental.transaction
 
 import com.example.javac.incremental.entity.ExitCode
 import com.example.javac.incremental.reporter.EventReporter
-import com.example.javac.incremental.transaction.resource.FileResource
+import com.example.javac.incremental.transaction.resource.FileBackupResource
 import java.io.File
 
 class CompilationTransaction(private val eventReporter: EventReporter) {
@@ -10,7 +10,7 @@ class CompilationTransaction(private val eventReporter: EventReporter) {
     private val resources = mutableListOf<CompilationResource>()
 
     fun deleteFile(file: File) {
-        registerResource(FileResource(file))
+        registerResource(FileBackupResource(file))
         file.delete()
     }
 
