@@ -56,7 +56,7 @@ abstract class DataStorageGraph<T>(
 
     override fun flush() {
         val data = storedData + inMemoryData - removedKeys
-        getStorageFileOrCreateNew().writeText(Json.Default.encodeToString(serializer, data))
+        getStorageFileOrCreateNew().writeText(Json.encodeToString(serializer, data))
     }
 
     private fun getStorageFileOrCreateNew(): File {

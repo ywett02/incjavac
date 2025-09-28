@@ -8,7 +8,7 @@ import java.io.File
 
 class ClasspathDigestInMemoryStorage private constructor(
     storageFile: File,
-) : DataStorageMap<File, String>(storageFile, mapSerializer(FileAsAbsPathSerializer, String.Companion.serializer())) {
+) : DataStorageMap<File, String>(storageFile, mapSerializer(FileAsAbsPathSerializer, String.serializer())) {
 
     fun getAllAndRemove(): Map<File, String> {
         val data = getAll()

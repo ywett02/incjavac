@@ -9,8 +9,4 @@ class TestEventRecorder : EventReporter {
     override fun reportEvent(message: String) {
         _events.add(message)
     }
-
-    fun clear() {
-        _events.clear()
-    }
 }

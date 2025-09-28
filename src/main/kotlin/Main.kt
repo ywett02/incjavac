@@ -8,7 +8,7 @@ fun main(array: Array<String>) {
         val exitCode = IncrementalJavaCompilerCommand.run(array)
         println("Compilation result code: ${exitCode.code}")
         exitProcess(0)
-    } catch (e: CmdLineException) {
+    } catch (_: CmdLineException) {
         exitProcess(2)
     } catch (e: Throwable) {
         println("incjavac tool failed: ${e.localizedMessage}")
