@@ -1,4 +1,4 @@
-package com.example.assignment
+package com.example.javac.incremental
 
 import org.kohsuke.args4j.CmdLineException
 import kotlin.system.exitProcess

@@ -4,7 +4,7 @@ plugins {
     kotlin("plugin.serialization") version "2.1.21"
 }
 
-group = "com.example.assignment"
+group = "com.example.javac.incremental"
 version = "1.0-SNAPSHOT"
 
 repositories {
@@ -26,5 +26,5 @@ tasks.test {
 
 application {
     applicationName = "incjavac"
-    mainClass = "com.example.assignment.MainKt"
+    mainClass = "com.example.javac.incremental.MainKt"
 }

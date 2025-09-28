@@ -1,8 +1,8 @@
-package com.example.assignment.analysis
+package com.example.javac.incremental.analysis
 
-import com.example.assignment.entity.FileChanges
-import com.example.assignment.storage.inMemory.FileDigestInMemoryStorage
-import com.example.assignment.util.md5
+import com.example.javac.incremental.entity.FileChanges
+import com.example.javac.incremental.storage.inMemory.FileDigestInMemoryStorage
+import com.example.javac.incremental.util.md5
 import java.io.File
 
 class FileChangesTracker(

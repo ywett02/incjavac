@@ -1,6 +1,6 @@
-package com.example.assignment.analysis.constant
+package com.example.javac.incremental.analysis.constant
 
-import com.example.assignment.storage.inMemory.DependencyGraphInMemoryStorage
+import com.example.javac.incremental.storage.inMemory.DependencyGraphInMemoryStorage
 import com.sun.source.util.*
 
 

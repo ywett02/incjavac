@@ -1,13 +1,13 @@
-package com.example.assignment
+package com.example.javac.incremental
 
-import com.example.assignment.analysis.*
-import com.example.assignment.analysis.constant.ConstantDependencyMapCollectorFactory
-import com.example.assignment.entity.CompilationResult
-import com.example.assignment.entity.ExitCode
-import com.example.assignment.entity.ExitCode.COMPILATION_ERROR
-import com.example.assignment.entity.ExitCode.OK
-import com.example.assignment.entity.FileChanges
-import com.example.assignment.reporter.EventReporter
+import com.example.javac.incremental.analysis.*
+import com.example.javac.incremental.analysis.constant.ConstantDependencyMapCollectorFactory
+import com.example.javac.incremental.entity.CompilationResult
+import com.example.javac.incremental.entity.ExitCode
+import com.example.javac.incremental.entity.ExitCode.COMPILATION_ERROR
+import com.example.javac.incremental.entity.ExitCode.OK
+import com.example.javac.incremental.entity.FileChanges
+import com.example.javac.incremental.reporter.EventReporter
 import com.sun.source.util.JavacTask
 import java.io.File
 

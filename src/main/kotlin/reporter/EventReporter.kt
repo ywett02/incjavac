@@ -1,4 +1,4 @@
-package com.example.assignment.reporter
+package com.example.javac.incremental.reporter
 
 interface EventReporter {
     fun reportEvent(message: String)

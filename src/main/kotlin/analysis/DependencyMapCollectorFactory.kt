@@ -1,7 +1,7 @@
-package com.example.assignment.analysis
+package com.example.javac.incremental.analysis
 
-import com.example.assignment.IncrementalJavaCompilerContext
-import com.example.assignment.storage.inMemory.DependencyGraphInMemoryStorage
+import com.example.javac.incremental.IncrementalJavaCompilerContext
+import com.example.javac.incremental.storage.inMemory.DependencyGraphInMemoryStorage
 import javax.lang.model.util.Elements
 
 class DependencyMapCollectorFactory(

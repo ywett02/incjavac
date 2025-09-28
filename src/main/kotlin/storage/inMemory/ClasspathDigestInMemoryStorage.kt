@@ -1,8 +1,8 @@
-package com.example.assignment.storage.inMemory
+package com.example.javac.incremental.storage.inMemory
 
-import com.example.assignment.entity.serializer.FileAsAbsPathSerializer
-import com.example.assignment.storage.DataStorageMap
-import com.example.assignment.util.mapSerializer
+import com.example.javac.incremental.entity.serializer.FileAsAbsPathSerializer
+import com.example.javac.incremental.storage.DataStorageMap
+import com.example.javac.incremental.util.mapSerializer
 import kotlinx.serialization.builtins.serializer
 import java.io.File
 

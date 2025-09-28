@@ -1,8 +1,8 @@
-package com.example.assignment.analysis
+package com.example.javac.incremental.analysis
 
-import com.example.assignment.IncrementalJavaCompilerContext
-import com.example.assignment.entity.FqName
-import com.example.assignment.storage.inMemory.DependencyGraphInMemoryStorage
+import com.example.javac.incremental.IncrementalJavaCompilerContext
+import com.example.javac.incremental.entity.FqName
+import com.example.javac.incremental.storage.inMemory.DependencyGraphInMemoryStorage
 import com.sun.source.util.TaskEvent
 import com.sun.source.util.TaskListener
 import org.objectweb.asm.ClassReader

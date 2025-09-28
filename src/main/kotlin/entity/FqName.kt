@@ -1,4 +1,4 @@
-package com.example.assignment.entity
+package com.example.javac.incremental.entity
 
 import kotlinx.serialization.Serializable
 

@@ -1,4 +1,4 @@
-package com.example.assignment.entity
+package com.example.javac.incremental.entity
 
 
 data class Node<T>(val value: T) {

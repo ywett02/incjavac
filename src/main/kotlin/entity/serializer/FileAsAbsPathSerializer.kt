@@ -1,4 +1,4 @@
-package com.example.assignment.entity.serializer
+package com.example.javac.incremental.entity.serializer
 
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.descriptors.PrimitiveKind

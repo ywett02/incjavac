@@ -1,12 +1,12 @@
-package com.example.assignment
+package com.example.javac.incremental
 
-import com.example.assignment.analysis.*
-import com.example.assignment.analysis.constant.ConstantDependencyMapCollectorFactory
-import com.example.assignment.entity.ExitCode
-import com.example.assignment.reporter.EventReporter
-import com.example.assignment.storage.inMemory.*
-import com.example.assignment.transaction.CompilationTransaction
-import com.example.assignment.transaction.resource.asResource
+import com.example.javac.incremental.analysis.*
+import com.example.javac.incremental.analysis.constant.ConstantDependencyMapCollectorFactory
+import com.example.javac.incremental.entity.ExitCode
+import com.example.javac.incremental.reporter.EventReporter
+import com.example.javac.incremental.storage.inMemory.*
+import com.example.javac.incremental.transaction.CompilationTransaction
+import com.example.javac.incremental.transaction.resource.asResource
 import org.kohsuke.args4j.CmdLineException
 import org.kohsuke.args4j.CmdLineParser
 import org.kohsuke.args4j.Option

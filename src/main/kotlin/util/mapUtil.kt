@@ -1,4 +1,4 @@
-package com.example.assignment.util
+package com.example.javac.incremental.util
 
 fun <K, V> Map<K, Set<V>>.inverted(): Map<V, Set<K>> {
     val result = mutableMapOf<V, MutableSet<K>>()

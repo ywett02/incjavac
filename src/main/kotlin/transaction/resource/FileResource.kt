@@ -1,6 +1,6 @@
-package com.example.assignment.transaction.resource
+package com.example.javac.incremental.transaction.resource
 
-import com.example.assignment.transaction.CompilationResource
+import com.example.javac.incremental.transaction.CompilationResource
 import com.google.common.jimfs.Jimfs
 import java.io.File
 import java.nio.file.Files

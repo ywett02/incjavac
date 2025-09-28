@@ -1,7 +1,7 @@
-package com.example.assignment.analysis
+package com.example.javac.incremental.analysis
 
-import com.example.assignment.storage.inMemory.ClasspathDigestInMemoryStorage
-import com.example.assignment.util.md5
+import com.example.javac.incremental.storage.inMemory.ClasspathDigestInMemoryStorage
+import com.example.javac.incremental.util.md5
 import java.io.File
 
 class ClasspathChangesTracker(

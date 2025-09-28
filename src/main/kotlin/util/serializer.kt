@@ -1,4 +1,4 @@
-package com.example.assignment.util
+package com.example.javac.incremental.util
 
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.builtins.MapSerializer

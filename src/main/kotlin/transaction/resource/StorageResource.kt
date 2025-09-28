@@ -1,7 +1,7 @@
-package com.example.assignment.transaction.resource
+package com.example.javac.incremental.transaction.resource
 
-import com.example.assignment.storage.Storage
-import com.example.assignment.transaction.CompilationResource
+import com.example.javac.incremental.storage.Storage
+import com.example.javac.incremental.transaction.CompilationResource
 
 class StorageResource(
     private val storage: Storage

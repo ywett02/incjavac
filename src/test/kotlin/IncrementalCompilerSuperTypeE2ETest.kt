@@ -1,13 +1,13 @@
-package com.example.assignment
+package com.example.javac.incremental
 
-import com.example.assignment.analysis.*
-import com.example.assignment.analysis.constant.ConstantDependencyMapCollectorFactory
-import com.example.assignment.entity.ExitCode
-import com.example.assignment.reporter.NoOpReporter
-import com.example.assignment.reporter.TestEventRecorder
-import com.example.assignment.storage.inMemory.*
-import com.example.assignment.transaction.CompilationTransaction
-import com.example.assignment.transaction.resource.asResource
+import com.example.javac.incremental.analysis.*
+import com.example.javac.incremental.analysis.constant.ConstantDependencyMapCollectorFactory
+import com.example.javac.incremental.entity.ExitCode
+import com.example.javac.incremental.reporter.NoOpReporter
+import com.example.javac.incremental.reporter.TestEventRecorder
+import com.example.javac.incremental.storage.inMemory.*
+import com.example.javac.incremental.transaction.CompilationTransaction
+import com.example.javac.incremental.transaction.resource.asResource
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir

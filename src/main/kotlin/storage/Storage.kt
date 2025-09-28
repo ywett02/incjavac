@@ -1,4 +1,4 @@
-package com.example.assignment.storage
+package com.example.javac.incremental.storage
 
 interface Storage {
 

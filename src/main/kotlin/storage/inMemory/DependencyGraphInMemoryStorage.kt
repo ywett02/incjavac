@@ -1,8 +1,8 @@
-package com.example.assignment.storage.inMemory
+package com.example.javac.incremental.storage.inMemory
 
-import com.example.assignment.entity.FqName
-import com.example.assignment.entity.serializer.FqNameAsStringSerializer
-import com.example.assignment.storage.DataStorageGraph
+import com.example.javac.incremental.entity.FqName
+import com.example.javac.incremental.entity.serializer.FqNameAsStringSerializer
+import com.example.javac.incremental.storage.DataStorageGraph
 import java.io.File
 
 class DependencyGraphInMemoryStorage private constructor(

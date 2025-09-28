@@ -1,6 +1,6 @@
-package com.example.assignment.analysis.constant
+package com.example.javac.incremental.analysis.constant
 
-import com.example.assignment.entity.FqName
+import com.example.javac.incremental.entity.FqName
 import com.sun.source.tree.ClassTree
 import com.sun.source.tree.CompilationUnitTree
 import com.sun.source.tree.IdentifierTree

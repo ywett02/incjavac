@@ -1,6 +1,6 @@
 package org.objectweb.asm.depend;
 
-import com.example.assignment.entity.FqName;
+import com.example.javac.incremental.entity.FqName;
 
 import java.util.HashSet;
 import java.util.Set;

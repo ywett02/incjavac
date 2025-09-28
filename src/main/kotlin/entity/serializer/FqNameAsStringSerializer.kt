@@ -1,6 +1,6 @@
-package com.example.assignment.entity.serializer
+package com.example.javac.incremental.entity.serializer
 
-import com.example.assignment.entity.FqName
+import com.example.javac.incremental.entity.FqName
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.descriptors.PrimitiveKind
 import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor

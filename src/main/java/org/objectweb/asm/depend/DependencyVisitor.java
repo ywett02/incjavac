@@ -29,7 +29,7 @@
  */
 package org.objectweb.asm.depend;
 
-import com.example.assignment.entity.FqName;
+import com.example.javac.incremental.entity.FqName;
 import org.objectweb.asm.*;
 import org.objectweb.asm.signature.SignatureReader;
 import org.objectweb.asm.signature.SignatureVisitor;
