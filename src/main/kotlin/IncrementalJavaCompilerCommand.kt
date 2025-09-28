@@ -4,14 +4,9 @@ import com.example.assignment.analysis.*
 import com.example.assignment.analysis.constant.ConstantDependencyMapCollectorFactory
 import com.example.assignment.entity.ExitCode
 import com.example.assignment.reporter.EventReporter
-import com.example.assignment.resource.impl.AutoCloseableResourceManager
-import com.example.assignment.resource.impl.FileResource
-import com.example.assignment.resource.impl.asResource
-import com.example.assignment.storage.inMemory.ClasspathDigestInMemoryStorage
-import com.example.assignment.storage.inMemory.DependencyGraphInMemoryStorage
-import com.example.assignment.storage.inMemory.FileDigestInMemoryStorage
-import com.example.assignment.storage.inMemory.FileToFqnMapInMemoryStorage
-import com.example.assignment.storage.inMemory.FqnToFileMapInMemoryStorage
+import com.example.assignment.storage.inMemory.*
+import com.example.assignment.transaction.CompilationTransaction
+import com.example.assignment.transaction.impl.asResource
 import org.kohsuke.args4j.CmdLineException
 import org.kohsuke.args4j.CmdLineParser
 import org.kohsuke.args4j.Option
@@ -74,15 +69,11 @@ class IncrementalJavaCompilerCommand private constructor() {
     private val metadataDir: File
         get() = cacheDir.resolve(DEFAULT_METADATA_DIR_NAME)
 
-    private val directoryBackup: File
-        get() = cacheDir.resolve(DEFAULT_BACKUP_DIR_NAME)
-
     companion object {
         private const val DEFAULT_BUILD_DIR_NAME = "build"
         private const val DEFAULT_CACHE_DIR_NAME = "cache"
         private const val DEFAULT_DIRECTORY_DIR_NAME = "classes"
         private const val DEFAULT_METADATA_DIR_NAME = "metadata"
-        private const val DEFAULT_BACKUP_DIR_NAME = "backup"
 
         fun run(args: Array<String>): ExitCode {
             val incrementalJavaCompilerCommand = createCommand(args)
@@ -99,27 +90,20 @@ class IncrementalJavaCompilerCommand private constructor() {
             val dependencyGraphInMemoryStorage =
                 DependencyGraphInMemoryStorage.create(incrementalJavaCompilerCommand.metadataDir)
 
-            val resourceManager = AutoCloseableResourceManager(eventReporter).apply {
+            val resourceManager = CompilationTransaction(eventReporter).apply {
                 registerResource(fileDigestInMemoryStorage.asResource())
                 registerResource(classpathDigestInMemoryStorage.asResource())
                 registerResource(fileToFqnMapInMemoryStorage.asResource())
                 registerResource(fqnToFileMapInMemoryStorage.asResource())
                 registerResource(dependencyGraphInMemoryStorage.asResource())
-                registerResource(
-                    FileResource(
-                        incrementalJavaCompilerCommand.directoryBackup.absoluteFile,
-                        incrementalJavaCompilerCommand.directory.absoluteFile
-                    )
-                )
             }
 
             val incrementalJavaCompilerContext = IncrementalJavaCompilerContext(
                 src = incrementalJavaCompilerCommand.src.absoluteFile,
                 outputDir = incrementalJavaCompilerCommand.directory.absoluteFile,
-                outputDirBackup = incrementalJavaCompilerCommand.directoryBackup.absoluteFile,
                 classpath = incrementalJavaCompilerCommand.classpath,
                 javaCompiler = ToolProvider.getSystemJavaCompiler(),
-                resourceManager = resourceManager
+                compilationTransaction = resourceManager
             )
 
             val incrementalJavaCompilerRunner =

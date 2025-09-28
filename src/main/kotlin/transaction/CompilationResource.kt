@@ -1,4 +1,4 @@
-package com.example.assignment.resource
+package com.example.assignment.transaction
 
 interface CompilationResource {
 

@@ -5,13 +5,9 @@ import com.example.assignment.analysis.constant.ConstantDependencyMapCollectorFa
 import com.example.assignment.entity.ExitCode
 import com.example.assignment.reporter.NoOpReporter
 import com.example.assignment.reporter.TestEventRecorder
-import com.example.assignment.resource.impl.AutoCloseableResourceManager
-import com.example.assignment.resource.impl.asResource
-import com.example.assignment.storage.inMemory.ClasspathDigestInMemoryStorage
-import com.example.assignment.storage.inMemory.DependencyGraphInMemoryStorage
-import com.example.assignment.storage.inMemory.FileDigestInMemoryStorage
-import com.example.assignment.storage.inMemory.FileToFqnMapInMemoryStorage
-import com.example.assignment.storage.inMemory.FqnToFileMapInMemoryStorage
+import com.example.assignment.storage.inMemory.*
+import com.example.assignment.transaction.CompilationTransaction
+import com.example.assignment.transaction.impl.asResource
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
@@ -27,7 +23,6 @@ class IncrementalCompilationModificationE2ETest {
     lateinit var tempDir: File
     private lateinit var srcDir: File
     private lateinit var outputDir: File
-    private lateinit var outputDirBackup: File
     private lateinit var metadataDir: File
 
     private lateinit var fileDigestStorage: FileDigestInMemoryStorage
@@ -45,7 +40,6 @@ class IncrementalCompilationModificationE2ETest {
     fun setUp() {
         srcDir = File(tempDir, "src")
         outputDir = File(tempDir, "build/classes")
-        outputDirBackup = File(tempDir, "build/cache/backup")
         metadataDir = File(tempDir, "build/cache")
 
         fileDigestStorage = FileDigestInMemoryStorage.create(metadataDir)
@@ -61,7 +55,7 @@ class IncrementalCompilationModificationE2ETest {
         val fileToFqnMapCollectorFactory = FileToFqnMapCollectorFactory(fileToFqnStorage, fqnToFileStorage)
         val constantDependencyMapCollectorFactory = ConstantDependencyMapCollectorFactory(dependencyStorage)
 
-        val resourceManager = AutoCloseableResourceManager(NoOpReporter).apply {
+        val resourceManager = CompilationTransaction(NoOpReporter).apply {
             registerResource(fileDigestStorage.asResource())
             registerResource(classpathDigestStorage.asResource())
             registerResource(fileToFqnStorage.asResource())
@@ -72,10 +66,9 @@ class IncrementalCompilationModificationE2ETest {
         context = IncrementalJavaCompilerContext(
             src = srcDir,
             outputDir = outputDir,
-            outputDirBackup = outputDirBackup,
             classpath = null,
             javaCompiler = ToolProvider.getSystemJavaCompiler(),
-            resourceManager = resourceManager
+            compilationTransaction = resourceManager
         )
 
         eventRecorder = TestEventRecorder()

@@ -5,9 +5,9 @@ import com.example.assignment.analysis.constant.ConstantDependencyMapCollectorFa
 import com.example.assignment.entity.ExitCode
 import com.example.assignment.reporter.NoOpReporter
 import com.example.assignment.reporter.TestEventRecorder
-import com.example.assignment.resource.impl.AutoCloseableResourceManager
-import com.example.assignment.resource.impl.asResource
 import com.example.assignment.storage.inMemory.*
+import com.example.assignment.transaction.CompilationTransaction
+import com.example.assignment.transaction.impl.asResource
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
@@ -57,7 +57,7 @@ class IncrementalCompilationConstantE2ETest {
         val fileToFqnMapCollectorFactory = FileToFqnMapCollectorFactory(fileToFqnStorage, fqnToFileStorage)
         val constantDependencyMapCollectorFactory = ConstantDependencyMapCollectorFactory(dependencyStorage)
 
-        val resourceManager = AutoCloseableResourceManager(NoOpReporter).apply {
+        val resourceManager = CompilationTransaction(NoOpReporter).apply {
             registerResource(fileDigestStorage.asResource())
             registerResource(classpathDigestStorage.asResource())
             registerResource(fileToFqnStorage.asResource())
@@ -68,10 +68,9 @@ class IncrementalCompilationConstantE2ETest {
         context = IncrementalJavaCompilerContext(
             src = srcDir,
             outputDir = outputDir,
-            outputDirBackup = outputDirBackup,
             classpath = null,
             javaCompiler = ToolProvider.getSystemJavaCompiler(),
-            resourceManager = resourceManager
+            compilationTransaction = resourceManager
         )
 
 

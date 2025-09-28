@@ -10,8 +10,6 @@ import com.example.assignment.entity.FileChanges
 import com.example.assignment.reporter.EventReporter
 import com.sun.source.util.JavacTask
 import java.io.File
-import java.nio.file.Files
-import java.nio.file.StandardCopyOption
 
 class IncrementalJavaCompilerRunner(
     private val fileChangesTracker: FileChangesTracker,
@@ -59,11 +57,11 @@ class IncrementalJavaCompilerRunner(
                     }
                 }
 
-            incrementalJavaCompilerContext.resourceManager.cleanup(exitCode)
+            incrementalJavaCompilerContext.compilationTransaction.cleanup(exitCode)
             return exitCode
         } catch (e: Throwable) {
-            eventReporter.reportEvent("Compilation failed due to internal error: ${e.message}")
-            incrementalJavaCompilerContext.resourceManager.cleanup(ExitCode.INTERNAL_ERROR)
+            eventReporter.reportEvent("Compilation failed due to internal error: ${e.localizedMessage}")
+            incrementalJavaCompilerContext.compilationTransaction.cleanup(ExitCode.INTERNAL_ERROR)
             return ExitCode.INTERNAL_ERROR
         }
     }
@@ -88,7 +86,9 @@ class IncrementalJavaCompilerRunner(
                 reportEvent("Dirty class files: [${dirtyFiles.dirtyClassFiles.joinToString()}]")
             }
 
-            backupClassFiles(dirtyFiles.dirtyClassFiles, incrementalJavaCompilerContext)
+            for (classFile in dirtyFiles.dirtyClassFiles) {
+                incrementalJavaCompilerContext.compilationTransaction.deleteFile(classFile)
+            }
 
             if (dirtyFiles.dirtySourceFiles.isEmpty()) {
                 return CompilationResult.Success(OK)
@@ -106,25 +106,6 @@ class IncrementalJavaCompilerRunner(
             )
 
             return CompilationResult.Error(e)
-        }
-    }
-
-    private fun backupClassFiles(
-        classFiles: Set<File>,
-        incrementalJavaCompilerContext: IncrementalJavaCompilerContext
-    ) {
-        classFiles.forEach { file ->
-            val relativePath = file.relativeTo(incrementalJavaCompilerContext.outputDir)
-            val backupFile =
-                incrementalJavaCompilerContext.outputDirBackup.resolve(relativePath.path).also { file ->
-                    file.parentFile?.mkdirs()
-                }
-
-            Files.move(
-                file.toPath(),
-                backupFile.toPath(),
-                StandardCopyOption.REPLACE_EXISTING
-            )
         }
     }
 

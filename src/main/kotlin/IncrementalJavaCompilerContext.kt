@@ -1,6 +1,6 @@
 package com.example.assignment
 
-import com.example.assignment.resource.CompilationResourceManager
+import com.example.assignment.transaction.CompilationTransaction
 import java.io.File
 import javax.tools.JavaCompiler
 import javax.tools.StandardJavaFileManager
@@ -8,10 +8,9 @@ import javax.tools.StandardJavaFileManager
 data class IncrementalJavaCompilerContext(
     val src: File,
     val outputDir: File,
-    val outputDirBackup: File,
     val classpath: String?,
     val javaCompiler: JavaCompiler,
-    val resourceManager: CompilationResourceManager,
+    val compilationTransaction: CompilationTransaction,
 ) {
     val sourceFiles by lazy {
         findJavaFiles(src)

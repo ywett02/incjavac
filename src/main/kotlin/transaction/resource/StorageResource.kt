@@ -1,7 +1,7 @@
-package com.example.assignment.resource.impl
+package com.example.assignment.transaction.impl
 
-import com.example.assignment.resource.CompilationResource
 import com.example.assignment.storage.Storage
+import com.example.assignment.transaction.CompilationResource
 
 class StorageResource(
     private val storage: Storage
