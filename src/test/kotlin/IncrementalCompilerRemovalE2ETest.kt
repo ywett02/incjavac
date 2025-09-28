@@ -7,7 +7,7 @@ import com.example.assignment.reporter.NoOpReporter
 import com.example.assignment.reporter.TestEventRecorder
 import com.example.assignment.storage.inMemory.*
 import com.example.assignment.transaction.CompilationTransaction
-import com.example.assignment.transaction.impl.asResource
+import com.example.assignment.transaction.resource.asResource
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir

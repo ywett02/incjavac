@@ -1,39 +1,36 @@
-package com.example.assignment.transaction.impl
+package com.example.assignment.transaction.resource
 
 import com.example.assignment.transaction.CompilationResource
+import com.google.common.jimfs.Jimfs
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
 
-class FileResource private constructor(
-    private val file: File, private val backupFile: File
+class FileResource(
+    private val file: File
 ) : CompilationResource {
 
+    private val inMemoryFileSystem = Jimfs.newFileSystem()
+    private val backupPath = inMemoryFileSystem.getPath("backup")
+
+    init {
+        Files.copy(
+            file.toPath(), backupPath, StandardCopyOption.REPLACE_EXISTING
+        )
+    }
+
     override fun onSuccess() {
-        if (backupFile.exists()) {
-            backupFile.delete()
-        }
+        inMemoryFileSystem.close()
     }
 
     override fun onFailure() {
-        if (backupFile.exists()) {
-            restoreFromBackup()
-            backupFile.delete()
-        }
+        restoreFromBackup()
+        inMemoryFileSystem.close()
     }
 
     private fun restoreFromBackup() {
         Files.move(
-            backupFile.toPath(), file.toPath(), StandardCopyOption.REPLACE_EXISTING
+            backupPath, file.toPath(), StandardCopyOption.REPLACE_EXISTING
         )
-    }
-
-    companion object {
-        fun create(file: File): FileResource {
-            val backupFile: File = Files.createTempDirectory("backup").toFile()
-            Files.move(file.toPath(), backupFile.toPath(), StandardCopyOption.REPLACE_EXISTING)
-
-            return FileResource(file, backupFile)
-        }
     }
 }

@@ -15,6 +15,7 @@ dependencies {
     implementation("args4j:args4j:2.37")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.8.1")
     implementation("org.ow2.asm:asm:9.8")
+    implementation("com.google.jimfs:jimfs:1.3.0")
     testImplementation(kotlin("test"))
     testImplementation("org.mockito.kotlin:mockito-kotlin:5.2.1")
 }

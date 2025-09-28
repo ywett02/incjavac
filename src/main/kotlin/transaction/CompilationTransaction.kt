@@ -2,7 +2,7 @@ package com.example.assignment.transaction
 
 import com.example.assignment.entity.ExitCode
 import com.example.assignment.reporter.EventReporter
-import com.example.assignment.transaction.impl.FileResource
+import com.example.assignment.transaction.resource.FileResource
 import java.io.File
 
 class CompilationTransaction(private val eventReporter: EventReporter) {
@@ -10,7 +10,7 @@ class CompilationTransaction(private val eventReporter: EventReporter) {
     private val resources = mutableListOf<CompilationResource>()
 
     fun deleteFile(file: File) {
-        registerResource(FileResource.create(file))
+        registerResource(FileResource(file))
         file.delete()
     }
 

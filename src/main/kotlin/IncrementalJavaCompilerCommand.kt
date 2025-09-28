@@ -6,7 +6,7 @@ import com.example.assignment.entity.ExitCode
 import com.example.assignment.reporter.EventReporter
 import com.example.assignment.storage.inMemory.*
 import com.example.assignment.transaction.CompilationTransaction
-import com.example.assignment.transaction.impl.asResource
+import com.example.assignment.transaction.resource.asResource
 import org.kohsuke.args4j.CmdLineException
 import org.kohsuke.args4j.CmdLineParser
 import org.kohsuke.args4j.Option
